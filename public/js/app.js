@@ -391,13 +391,15 @@ async function openNewOrderModal() {
     currentCategory = 'drinks';
 
     try {
-        // Load available tables and menu items
-        const [tablesData, menuData] = await Promise.all([
+        // Load available tables, menu items, and categories
+        const [tablesData, menuData, categoriesData] = await Promise.all([
             fetch(`${API_BASE}/tables`).then(r => r.json()),
-            fetch(`${API_BASE}/menu/available`).then(r => r.json())
+            fetch(`${API_BASE}/menu/available`).then(r => r.json()),
+            fetch(`${API_BASE}/categories`).then(r => r.json())
         ]);
 
         menuItems = menuData;
+        categoriesCache = categoriesData;
 
         // Populate table grid (clickable cards instead of dropdown)
         const tableGrid = document.getElementById('order-table-grid');
@@ -407,29 +409,8 @@ async function openNewOrderModal() {
             </div>
         `).join('');
 
-        // Setup category tab handlers
-        const categoryTabs = document.querySelectorAll('.order-cat-btn');
-        categoryTabs.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                categoryTabs.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentCategory = btn.dataset.category;
-                renderOrderMenuItems(menuData, currentCategory);
-            });
-        });
-
-        // Set first category as active
-        categoryTabs.forEach(btn => {
-            if (btn.dataset.category === 'drinks') {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-
-        // Render menu items for the default category
-        renderOrderMenuItems(menuData, currentCategory);
+        // Render Top Level Type Tabs
+        renderOrderTypeTabs('drink'); // Default to drinks
 
         // Reset form
         document.getElementById('order-table').value = '';
@@ -453,6 +434,67 @@ async function openNewOrderModal() {
     } catch (error) {
         console.error('Error opening order modal:', error);
         showToast('Error loading data', 'error');
+    }
+}
+
+let currentOrderType = 'drink';
+
+function renderOrderTypeTabs(activeType = 'drink') {
+    currentOrderType = activeType;
+    const container = document.getElementById('order-type-tabs');
+
+    container.innerHTML = `
+        <button type="button" class="order-cat-btn ${activeType === 'food' ? 'active' : ''}" onclick="switchOrderType('food')">
+            <span class="cat-icon">🍽️</span>
+            <span class="cat-name">Yiyecekler</span>
+        </button>
+        <button type="button" class="order-cat-btn ${activeType === 'drink' ? 'active' : ''}" onclick="switchOrderType('drink')">
+            <span class="cat-icon">☕</span>
+            <span class="cat-name">İçecekler</span>
+        </button>
+    `;
+
+    // Render sub-categories for the selected type
+    renderOrderCategoryTabs(activeType);
+}
+
+function switchOrderType(type) {
+    if (currentOrderType === type) return;
+    renderOrderTypeTabs(type);
+}
+
+function renderOrderCategoryTabs(type) {
+    const container = document.getElementById('order-category-tabs');
+    const filteredCats = categoriesCache.filter(c => c.type === type);
+
+    if (filteredCats.length === 0) {
+        container.innerHTML = '<p class="empty-state-small">No categories found</p>';
+        return;
+    }
+
+    container.innerHTML = filteredCats.map(cat => `
+        <button type="button" class="order-cat-btn sub-cat-btn" data-category="${cat.slug}">
+            <span class="cat-icon">${cat.emoji}</span>
+            <span class="cat-name">${cat.name}</span>
+        </button>
+    `).join('');
+
+    // Add click listeners
+    const subButtons = container.querySelectorAll('.sub-cat-btn');
+    if (subButtons.length > 0) {
+        subButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                subButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                renderOrderMenuItems(menuItems, currentCategory);
+            });
+        });
+
+        // Select first one by default
+        subButtons[0].click();
+    } else {
+        document.getElementById('order-menu-items').innerHTML = '<p class="empty-state">No categories available</p>';
     }
 }
 
