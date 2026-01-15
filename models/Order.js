@@ -5,7 +5,7 @@ class Order {
     const orders = query(`
       SELECT o.*, t.table_number 
       FROM orders o
-      JOIN tables t ON o.table_id = t.id
+      LEFT JOIN tables t ON o.table_id = t.id
       ORDER BY o.created_at DESC
     `);
 
@@ -19,7 +19,7 @@ class Order {
     const order = queryOne(`
       SELECT o.*, t.table_number 
       FROM orders o
-      JOIN tables t ON o.table_id = t.id
+      LEFT JOIN tables t ON o.table_id = t.id
       WHERE o.id = ?
     `, [id]);
 
@@ -34,7 +34,7 @@ class Order {
     const orders = query(`
       SELECT o.*, t.table_number 
       FROM orders o
-      JOIN tables t ON o.table_id = t.id
+      LEFT JOIN tables t ON o.table_id = t.id
       WHERE o.table_id = ?
       ORDER BY o.created_at DESC
     `, [tableId]);
@@ -49,7 +49,7 @@ class Order {
     const orders = query(`
       SELECT o.*, t.table_number 
       FROM orders o
-      JOIN tables t ON o.table_id = t.id
+      LEFT JOIN tables t ON o.table_id = t.id
       WHERE o.status NOT IN ('paid')
       ORDER BY 
         CASE o.status 
