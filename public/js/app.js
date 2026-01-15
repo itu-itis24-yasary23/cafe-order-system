@@ -825,6 +825,13 @@ function setPhotoPreview(imageUrl) {
 function previewMenuPhoto(input) {
     if (input.files && input.files[0]) {
         const file = input.files[0];
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file', 'error');
+            return;
+        }
+
         const reader = new FileReader();
 
         reader.onload = function (e) {
@@ -834,6 +841,12 @@ function previewMenuPhoto(input) {
             };
             setPhotoPreview(e.target.result);
             photoRemoved = false; // User is adding a new photo, not removing
+            console.log('Photo loaded:', file.name); // Debug log
+        };
+
+        reader.onerror = function () {
+            showToast('Error reading file', 'error');
+            pendingPhotoData = null;
         };
 
         reader.readAsDataURL(file);
@@ -868,7 +881,8 @@ async function handleMenuSubmit(e) {
 
     try {
         // If there's a new photo to upload
-        if (pendingPhotoData) {
+        if (pendingPhotoData && pendingPhotoData.data) {
+            console.log('Uploading photo:', pendingPhotoData.filename);
             showToast('Uploading photo...', 'info');
             const uploadResponse = await fetch('/api/upload', {
                 method: 'POST',
@@ -882,9 +896,14 @@ async function handleMenuSubmit(e) {
             if (uploadResponse.ok) {
                 const uploadResult = await uploadResponse.json();
                 imageUrl = uploadResult.imageUrl;
+                console.log('Photo uploaded successfully:', imageUrl);
             } else {
+                const errorData = await uploadResponse.json();
+                console.error('Upload failed:', errorData);
                 throw new Error('Failed to upload photo');
             }
+        } else {
+            console.log('No pending photo data, imageUrl:', imageUrl);
         }
 
         let response;
