@@ -864,13 +864,37 @@ function openMenuItemModal(itemId = null) {
     const categorySelect = document.getElementById('menu-category');
 
     // Populate dynamic categories
+    // Populate dynamic categories
+    const foodCats = categoriesCache.filter(c => c.type === 'food');
+    const drinkCats = categoriesCache.filter(c => c.type === 'drink');
+
     categorySelect.innerHTML = '<option value="">Select category</option>';
-    categoriesCache.forEach(cat => {
-        const option = document.createElement('option');
-        option.value = cat.slug;
-        option.textContent = `${cat.emoji} ${cat.name}`;
-        categorySelect.appendChild(option);
-    });
+
+    // Food Group
+    if (foodCats.length > 0) {
+        const foodGroup = document.createElement('optgroup');
+        foodGroup.label = 'Yiyecekler';
+        foodCats.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.slug;
+            option.textContent = `${cat.emoji} ${cat.name}`;
+            foodGroup.appendChild(option);
+        });
+        categorySelect.appendChild(foodGroup);
+    }
+
+    // Drink Group
+    if (drinkCats.length > 0) {
+        const drinkGroup = document.createElement('optgroup');
+        drinkGroup.label = 'İçecekler';
+        drinkCats.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.slug;
+            option.textContent = `${cat.emoji} ${cat.name}`;
+            drinkGroup.appendChild(option);
+        });
+        categorySelect.appendChild(drinkGroup);
+    }
 
     form.reset();
     document.getElementById('menu-item-id').value = '';
