@@ -722,13 +722,28 @@ async function loadMenu() {
         allMenuItems = await menuResponse.json();
 
         // Render sidebar categories
+        // Group categories
+        const foodCats = categories.filter(c => c.type === 'food');
+        const drinkCats = categories.filter(c => c.type === 'drink');
+
+        // Render sidebar categories
         const sidebarProps = document.querySelector('.menu-sidebar');
         sidebarProps.innerHTML = `
             <div class="sidebar-category active" data-category="all">
               <span class="category-icon">📋</span>
               <span class="category-name">All Items</span>
             </div>
-            ${categories.map(cat => `
+            
+            <div class="sidebar-section-title">YİYECEKLER</div>
+            ${foodCats.map(cat => `
+            <div class="sidebar-category" data-category="${cat.slug}">
+              <span class="category-icon">${cat.emoji}</span>
+              <span class="category-name">${cat.name}</span>
+            </div>
+            `).join('')}
+
+            <div class="sidebar-section-title">İÇECEKLER</div>
+            ${drinkCats.map(cat => `
             <div class="sidebar-category" data-category="${cat.slug}">
               <span class="category-icon">${cat.emoji}</span>
               <span class="category-name">${cat.name}</span>

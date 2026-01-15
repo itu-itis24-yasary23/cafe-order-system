@@ -909,9 +909,24 @@ body {
   background: var(--bg-card);
   border-radius: var(--border-radius-lg);
   padding: 1rem;
-  height: fit-content;
+  height: calc(100vh - 100px);
   position: sticky;
   top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.sidebar-section-title {
+  color: var(--accent-primary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .sidebar-category {
