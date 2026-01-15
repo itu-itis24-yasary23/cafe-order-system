@@ -174,22 +174,57 @@
       <section id="menu-section" class="section">
         <div class="section-header">
           <h1>Menu Management</h1>
-          <button class="btn-primary" onclick="openMenuItemModal()">
-            <span>➕</span> Add Item
-          </button>
+          <div class="menu-header-actions">
+            <div class="menu-search">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="menu-search" placeholder="Search products..."
+                oninput="filterMenuBySearch(this.value)">
+            </div>
+            <button class="btn-primary" onclick="openMenuItemModal()">
+              <span>➕</span> Add Item
+            </button>
+          </div>
         </div>
 
-        <div class="menu-categories">
-          <button class="category-btn active" data-category="all">All</button>
-          <button class="category-btn" data-category="drinks">🍹 Drinks</button>
-          <button class="category-btn" data-category="appetizers">🥗 Appetizers</button>
-          <button class="category-btn" data-category="main_course">🍽️ Main Course</button>
-          <button class="category-btn" data-category="desserts">🍰 Desserts</button>
-          <button class="category-btn" data-category="sides">🍟 Sides</button>
-        </div>
+        <div class="menu-layout">
+          <!-- Left Sidebar Categories -->
+          <aside class="menu-sidebar">
+            <div class="sidebar-category active" data-category="all">
+              <span class="category-icon">📋</span>
+              <span class="category-name">All Items</span>
+            </div>
+            <div class="sidebar-category" data-category="drinks">
+              <span class="category-icon">🍹</span>
+              <span class="category-name">Drinks</span>
+            </div>
+            <div class="sidebar-category" data-category="appetizers">
+              <span class="category-icon">🥗</span>
+              <span class="category-name">Appetizers</span>
+            </div>
+            <div class="sidebar-category" data-category="main_course">
+              <span class="category-icon">🍽️</span>
+              <span class="category-name">Main Course</span>
+            </div>
+            <div class="sidebar-category" data-category="desserts">
+              <span class="category-icon">🍰</span>
+              <span class="category-name">Desserts</span>
+            </div>
+            <div class="sidebar-category" data-category="sides">
+              <span class="category-icon">🍟</span>
+              <span class="category-name">Sides</span>
+            </div>
+          </aside>
 
-        <div id="menu-grid" class="menu-grid">
-          <p class="empty-state">Loading menu...</p>
+          <!-- Menu Items Grid -->
+          <div class="menu-content">
+            <div class="menu-content-header">
+              <h2 id="menu-category-title">All Items</h2>
+              <span id="menu-item-count" class="item-count">0 items</span>
+            </div>
+            <div id="menu-grid" class="menu-grid-new">
+              <p class="empty-state">Loading menu...</p>
+            </div>
+          </div>
         </div>
       </section>
     </main>

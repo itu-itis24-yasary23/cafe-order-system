@@ -661,23 +661,26 @@ async function deleteOrder(orderId) {
 // MENU
 // =====================================================
 let menuFilter = 'all';
+let allMenuItems = [];
+let menuSearchTerm = '';
 
 async function loadMenu() {
     try {
         const response = await fetch(`${API_BASE}/menu`);
-        const items = await response.json();
+        allMenuItems = await response.json();
 
-        // Setup category filters
-        document.querySelectorAll('.category-btn').forEach(btn => {
+        // Setup sidebar category filters
+        document.querySelectorAll('.sidebar-category').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.sidebar-category').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 menuFilter = btn.dataset.category;
-                renderMenu(items);
+                updateCategoryTitle(btn.querySelector('.category-name').textContent);
+                renderMenuNew(allMenuItems);
             });
         });
 
-        renderMenu(items);
+        renderMenuNew(allMenuItems);
 
     } catch (error) {
         console.error('Error loading menu:', error);
@@ -685,37 +688,79 @@ async function loadMenu() {
     }
 }
 
-function renderMenu(items) {
-    const filtered = menuFilter === 'all'
+function updateCategoryTitle(title) {
+    document.getElementById('menu-category-title').textContent = title;
+}
+
+function filterMenuBySearch(term) {
+    menuSearchTerm = term.toLowerCase();
+    renderMenuNew(allMenuItems);
+}
+
+function getCategoryEmoji(category) {
+    const emojis = {
+        'drinks': '🍹',
+        'appetizers': '🥗',
+        'main_course': '🍽️',
+        'desserts': '🍰',
+        'sides': '🍟'
+    };
+    return emojis[category] || '🍴';
+}
+
+function renderMenuNew(items) {
+    // Filter by category
+    let filtered = menuFilter === 'all'
         ? items
         : items.filter(i => i.category === menuFilter);
 
+    // Filter by search term
+    if (menuSearchTerm) {
+        filtered = filtered.filter(item =>
+            item.name.toLowerCase().includes(menuSearchTerm) ||
+            (item.description && item.description.toLowerCase().includes(menuSearchTerm))
+        );
+    }
+
     const container = document.getElementById('menu-grid');
+    const countEl = document.getElementById('menu-item-count');
+
+    countEl.textContent = `${filtered.length} item${filtered.length !== 1 ? 's' : ''}`;
 
     if (filtered.length === 0) {
-        container.innerHTML = '<p class="empty-state">No items in this category</p>';
+        container.innerHTML = '<p class="empty-state">No items found</p>';
         return;
     }
 
     container.innerHTML = filtered.map(item => `
-    <div class="menu-card ${item.available ? '' : 'unavailable'}">
-      <div class="menu-card-header">
-        <span class="menu-item-name">${item.name}</span>
-        <span class="menu-item-price">$${item.price.toFixed(2)}</span>
-      </div>
-      <span class="menu-item-category">${formatCategory(item.category)}</span>
-      <p class="menu-item-description">${item.description || 'No description'}</p>
-      <div class="menu-item-availability">
-        <div class="availability-toggle ${item.available ? 'active' : ''}" 
-             onclick="toggleMenuAvailability(${item.id})"></div>
-        <span class="availability-label">${item.available ? 'Available' : 'Unavailable'}</span>
-      </div>
-      <div class="menu-card-actions">
-        <button class="btn-edit" onclick="editMenuItem(${item.id})">Edit</button>
-        <button class="btn-delete" onclick="confirmDeleteMenuItem(${item.id})">Delete</button>
-      </div>
-    </div>
-  `).join('');
+        <div class="menu-card-new ${item.available ? '' : 'unavailable'}">
+            <div class="menu-card-image">
+                <span class="category-emoji">${getCategoryEmoji(item.category)}</span>
+                ${!item.available ? '<span class="menu-card-unavailable-badge">Unavailable</span>' : ''}
+            </div>
+            <div class="menu-card-body">
+                <div class="menu-card-name">${item.name}</div>
+                <div class="menu-card-description">${item.description || 'Delicious menu item'}</div>
+                <div class="menu-card-availability">
+                    <div class="toggle-switch ${item.available ? 'active' : ''}" 
+                         onclick="toggleMenuAvailability(${item.id})"></div>
+                    <span class="toggle-label">${item.available ? 'In Stock' : 'Out of Stock'}</span>
+                </div>
+                <div class="menu-card-footer">
+                    <span class="menu-card-price">$${item.price.toFixed(2)}</span>
+                    <div class="menu-card-actions-new">
+                        <button class="btn-edit-small" onclick="editMenuItem(${item.id})" title="Edit">✏️</button>
+                        <button class="btn-delete-small" onclick="confirmDeleteMenuItem(${item.id})" title="Delete">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Keep old renderMenu for compatibility with order modal
+function renderMenu(items) {
+    renderMenuNew(items);
 }
 
 function openMenuItemModal(itemId = null) {
