@@ -763,6 +763,7 @@ function renderMenu(items) {
 // Photo upload state
 let pendingPhotoData = null;
 let currentPhotoUrl = null;
+let photoRemoved = false; // Track if user explicitly removed the photo
 
 function openMenuItemModal(itemId = null) {
     const modal = document.getElementById('menu-modal');
@@ -772,6 +773,7 @@ function openMenuItemModal(itemId = null) {
     form.reset();
     document.getElementById('menu-item-id').value = '';
     resetPhotoPreview();
+    photoRemoved = false;
 
     if (itemId) {
         title.textContent = 'Edit Menu Item';
@@ -829,6 +831,7 @@ function previewMenuPhoto(input) {
                 filename: file.name
             };
             setPhotoPreview(e.target.result);
+            photoRemoved = false; // User is adding a new photo, not removing
         };
 
         reader.readAsDataURL(file);
@@ -838,6 +841,7 @@ function previewMenuPhoto(input) {
 function removeMenuPhoto() {
     resetPhotoPreview();
     currentPhotoUrl = null;
+    photoRemoved = true; // User explicitly wants to remove the photo
 }
 
 function editMenuItem(itemId) {
@@ -854,6 +858,11 @@ async function handleMenuSubmit(e) {
     const category = document.getElementById('menu-category').value;
 
     let imageUrl = currentPhotoUrl;
+
+    // If user explicitly removed the photo, set to null
+    if (photoRemoved) {
+        imageUrl = null;
+    }
 
     try {
         // If there's a new photo to upload
