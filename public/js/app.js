@@ -763,6 +763,10 @@ function renderMenu(items) {
     renderMenuNew(items);
 }
 
+// Photo upload state
+let pendingPhotoData = null;
+let currentPhotoUrl = null;
+
 function openMenuItemModal(itemId = null) {
     const modal = document.getElementById('menu-modal');
     const title = document.getElementById('menu-modal-title');
@@ -770,6 +774,7 @@ function openMenuItemModal(itemId = null) {
 
     form.reset();
     document.getElementById('menu-item-id').value = '';
+    resetPhotoPreview();
 
     if (itemId) {
         title.textContent = 'Edit Menu Item';
@@ -782,12 +787,60 @@ function openMenuItemModal(itemId = null) {
                 document.getElementById('menu-description').value = item.description || '';
                 document.getElementById('menu-price').value = item.price;
                 document.getElementById('menu-category').value = item.category;
+
+                // Set current photo if exists
+                if (item.image_url) {
+                    setPhotoPreview(item.image_url);
+                    currentPhotoUrl = item.image_url;
+                }
             });
     } else {
         title.textContent = 'Add Menu Item';
     }
 
     modal.classList.add('active');
+}
+
+function resetPhotoPreview() {
+    pendingPhotoData = null;
+    currentPhotoUrl = null;
+    const preview = document.getElementById('menu-photo-preview');
+    preview.innerHTML = `
+        <span class="photo-placeholder">📷</span>
+        <span class="photo-text">No photo</span>
+    `;
+    preview.classList.remove('has-image');
+    document.getElementById('remove-photo-btn').style.display = 'none';
+    document.getElementById('menu-photo-input').value = '';
+}
+
+function setPhotoPreview(imageUrl) {
+    const preview = document.getElementById('menu-photo-preview');
+    preview.innerHTML = `<img src="${imageUrl}" alt="Item photo">`;
+    preview.classList.add('has-image');
+    document.getElementById('remove-photo-btn').style.display = 'inline-flex';
+}
+
+function previewMenuPhoto(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            pendingPhotoData = {
+                data: e.target.result,
+                filename: file.name
+            };
+            setPhotoPreview(e.target.result);
+        };
+
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeMenuPhoto() {
+    resetPhotoPreview();
+    currentPhotoUrl = null;
 }
 
 function editMenuItem(itemId) {
@@ -803,19 +856,41 @@ async function handleMenuSubmit(e) {
     const price = parseFloat(document.getElementById('menu-price').value);
     const category = document.getElementById('menu-category').value;
 
+    let imageUrl = currentPhotoUrl;
+
     try {
+        // If there's a new photo to upload
+        if (pendingPhotoData) {
+            showToast('Uploading photo...', 'info');
+            const uploadResponse = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image: pendingPhotoData.data,
+                    filename: pendingPhotoData.filename
+                })
+            });
+
+            if (uploadResponse.ok) {
+                const uploadResult = await uploadResponse.json();
+                imageUrl = uploadResult.imageUrl;
+            } else {
+                throw new Error('Failed to upload photo');
+            }
+        }
+
         let response;
         if (itemId) {
             response = await fetch(`${API_BASE}/menu/${itemId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, description, price, category })
+                body: JSON.stringify({ name, description, price, category, image_url: imageUrl })
             });
         } else {
             response = await fetch(`${API_BASE}/menu`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, description, price, category })
+                body: JSON.stringify({ name, description, price, category, image_url: imageUrl })
             });
         }
 
