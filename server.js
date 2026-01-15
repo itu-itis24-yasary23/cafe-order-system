@@ -2,14 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-// Initialize database
-require('./database/db');
-
-// Import routes
-const tablesRoutes = require('./routes/tables');
-const menuRoutes = require('./routes/menu');
-const ordersRoutes = require('./routes/orders');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -18,24 +10,44 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API Routes
-app.use('/api/tables', tablesRoutes);
-app.use('/api/menu', menuRoutes);
-app.use('/api/orders', ordersRoutes);
+// Initialize database and start server
+async function startServer() {
+    try {
+        // Initialize database
+        const { initDB } = require('./database/db');
+        await initDB();
+        console.log('✅ Database initialized');
 
-// Serve main page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+        // Import routes after DB is ready
+        const tablesRoutes = require('./routes/tables');
+        const menuRoutes = require('./routes/menu');
+        const ordersRoutes = require('./routes/orders');
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong!' });
-});
+        // API Routes
+        app.use('/api/tables', tablesRoutes);
+        app.use('/api/menu', menuRoutes);
+        app.use('/api/orders', ordersRoutes);
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`🍽️  Cafe Order System running at http://localhost:${PORT}`);
-    console.log(`📊 Dashboard: http://localhost:${PORT}`);
-});
+        // Serve main page
+        app.get('/', (req, res) => {
+            res.sendFile(path.join(__dirname, 'public', 'index.html'));
+        });
+
+        // Error handling middleware
+        app.use((err, req, res, next) => {
+            console.error(err.stack);
+            res.status(500).json({ error: 'Something went wrong!' });
+        });
+
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`🍽️  Cafe Order System running at http://localhost:${PORT}`);
+            console.log(`📊 Dashboard: http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
+
+startServer();

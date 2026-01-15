@@ -379,8 +379,14 @@ function getOrderActionButtons(order) {
     return buttons.join('');
 }
 
+// State for order modal
+let selectedTableId = null;
+let currentCategory = 'drinks';
+
 async function openNewOrderModal() {
     currentOrderItems = [];
+    selectedTableId = null;
+    currentCategory = 'drinks';
 
     try {
         // Load available tables and menu items
@@ -391,47 +397,105 @@ async function openNewOrderModal() {
 
         menuItems = menuData;
 
-        // Populate table select
-        const tableSelect = document.getElementById('order-table');
-        tableSelect.innerHTML = `
-      <option value="">Choose a table...</option>
-      ${tablesData.map(t => `
-        <option value="${t.id}">Table ${t.table_number} (${t.capacity} seats) - ${t.status}</option>
-      `).join('')}
-    `;
-
-        // Populate menu items grouped by category
-        const menuContainer = document.getElementById('order-menu-items');
-        const groupedMenu = groupByCategory(menuData);
-
-        menuContainer.innerHTML = Object.entries(groupedMenu).map(([category, items]) => `
-      <div class="menu-category-group">
-        <h4 style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; margin: 0.75rem 0 0.5rem; letter-spacing: 1px;">
-          ${formatCategory(category)}
-        </h4>
-        ${items.map(item => `
-          <div class="order-menu-item ${item.available ? '' : 'unavailable'}">
-            <div class="order-menu-item-info">
-              <div class="order-menu-item-name">${item.name}</div>
-              <div class="order-menu-item-price">$${item.price.toFixed(2)}</div>
+        // Populate table grid (clickable cards instead of dropdown)
+        const tableGrid = document.getElementById('order-table-grid');
+        tableGrid.innerHTML = tablesData.map(t => `
+            <div class="order-table-card ${t.status}" data-table-id="${t.id}" onclick="selectTable(${t.id}, ${t.table_number})">
+                <span class="table-num">${t.table_number}</span>
+                <span class="table-info">${t.capacity} seats • ${t.status}</span>
             </div>
-            <button class="order-menu-item-btn" onclick="addToOrder(${item.id})">+</button>
-          </div>
-        `).join('')}
-      </div>
-    `).join('');
+        `).join('');
 
-        updateOrderSummary();
+        // Setup category tab handlers
+        const categoryTabs = document.querySelectorAll('.order-cat-btn');
+        categoryTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                categoryTabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                renderOrderMenuItems(menuData, currentCategory);
+            });
+        });
 
+        // Set first category as active
+        categoryTabs.forEach(btn => {
+            if (btn.dataset.category === 'drinks') {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Render menu items for the default category
+        renderOrderMenuItems(menuData, currentCategory);
+
+        // Reset form
+        document.getElementById('order-table').value = '';
         document.getElementById('order-id').value = '';
         document.getElementById('order-notes').value = '';
         document.getElementById('order-modal-title').textContent = 'New Order';
+
+        // Reset selected table display
+        updateSelectedTableDisplay();
+        updateOrderSummary();
+
         document.getElementById('order-modal').classList.add('active');
 
     } catch (error) {
         console.error('Error opening order modal:', error);
         showToast('Error loading data', 'error');
     }
+}
+
+function selectTable(tableId, tableNumber) {
+    selectedTableId = tableId;
+    document.getElementById('order-table').value = tableId;
+
+    // Update visual selection
+    document.querySelectorAll('.order-table-card').forEach(card => {
+        card.classList.remove('selected');
+        if (parseInt(card.dataset.tableId) === tableId) {
+            card.classList.add('selected');
+        }
+    });
+
+    updateSelectedTableDisplay(tableNumber);
+}
+
+function updateSelectedTableDisplay(tableNumber = null) {
+    const container = document.getElementById('selected-table-info');
+    if (tableNumber) {
+        container.classList.add('has-table');
+        container.innerHTML = `<span class="table-badge">📍 Table ${tableNumber}</span>`;
+    } else {
+        container.classList.remove('has-table');
+        container.innerHTML = `<span class="table-badge">No table selected</span>`;
+    }
+}
+
+function renderOrderMenuItems(items, category) {
+    const container = document.getElementById('order-menu-items');
+    const categoryLabel = document.getElementById('current-category-label');
+
+    categoryLabel.textContent = formatCategory(category);
+
+    const filtered = items.filter(item => item.category === category);
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="empty-state">No items in this category</p>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(item => `
+        <div class="order-menu-item ${item.available ? '' : 'unavailable'}">
+            <div class="order-menu-item-name">${item.name}</div>
+            <div class="order-menu-item-price">$${item.price.toFixed(2)}</div>
+            <button type="button" class="order-menu-item-add" onclick="addToOrder(${item.id})">
+                + Add
+            </button>
+        </div>
+    `).join('');
 }
 
 function addToOrder(menuItemId) {

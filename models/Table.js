@@ -1,79 +1,84 @@
-const db = require('../database/db');
+const { query, queryOne, run } = require('../database/db');
 
 class Table {
-    static getAll() {
-        return db.prepare(`
+  static getAll() {
+    return query(`
       SELECT t.*, 
         (SELECT COUNT(*) FROM orders WHERE table_id = t.id AND status NOT IN ('paid')) as active_orders
       FROM tables t
       ORDER BY table_number
-    `).all();
-    }
+    `);
+  }
 
-    static getById(id) {
-        return db.prepare(`
+  static getById(id) {
+    return queryOne(`
       SELECT t.*, 
         (SELECT COUNT(*) FROM orders WHERE table_id = t.id AND status NOT IN ('paid')) as active_orders
       FROM tables t
       WHERE t.id = ?
-    `).get(id);
-    }
+    `, [id]);
+  }
 
-    static getByNumber(tableNumber) {
-        return db.prepare('SELECT * FROM tables WHERE table_number = ?').get(tableNumber);
-    }
+  static getByNumber(tableNumber) {
+    return queryOne('SELECT * FROM tables WHERE table_number = ?', [tableNumber]);
+  }
 
-    static create(tableNumber, capacity = 4) {
-        const stmt = db.prepare(`
-      INSERT INTO tables (table_number, capacity) 
-      VALUES (?, ?)
-    `);
-        const result = stmt.run(tableNumber, capacity);
-        return this.getById(result.lastInsertRowid);
-    }
+  static create(tableNumber, capacity = 4) {
+    const result = run(
+      'INSERT INTO tables (table_number, capacity) VALUES (?, ?)',
+      [tableNumber, capacity]
+    );
+    return this.getById(result.lastInsertRowid);
+  }
 
-    static update(id, data) {
-        const { table_number, capacity, status } = data;
-        const stmt = db.prepare(`
+  static update(id, data) {
+    const { table_number, capacity, status } = data;
+    const current = this.getById(id);
+    if (!current) return null;
+
+    run(`
       UPDATE tables 
-      SET table_number = COALESCE(?, table_number),
-          capacity = COALESCE(?, capacity),
-          status = COALESCE(?, status),
+      SET table_number = ?,
+          capacity = ?,
+          status = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `);
-        stmt.run(table_number, capacity, status, id);
-        return this.getById(id);
-    }
+    `, [
+      table_number ?? current.table_number,
+      capacity ?? current.capacity,
+      status ?? current.status,
+      id
+    ]);
+    return this.getById(id);
+  }
 
-    static updateStatus(id, status) {
-        const stmt = db.prepare(`
+  static updateStatus(id, status) {
+    run(`
       UPDATE tables 
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `);
-        stmt.run(status, id);
-        return this.getById(id);
-    }
+    `, [status, id]);
+    return this.getById(id);
+  }
 
-    static delete(id) {
-        const table = this.getById(id);
-        if (!table) return null;
+  static delete(id) {
+    const table = this.getById(id);
+    if (!table) return null;
 
-        db.prepare('DELETE FROM tables WHERE id = ?').run(id);
-        return table;
-    }
+    run('DELETE FROM tables WHERE id = ?', [id]);
+    return table;
+  }
 
-    static getStats() {
-        return db.prepare(`
+  static getStats() {
+    return queryOne(`
       SELECT 
         COUNT(*) as total,
         SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
         SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) as occupied,
         SUM(CASE WHEN status = 'reserved' THEN 1 ELSE 0 END) as reserved
       FROM tables
-    `).get();
-    }
+    `);
+  }
 }
 
 module.exports = Table;

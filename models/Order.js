@@ -1,52 +1,52 @@
-const db = require('../database/db');
+const { query, queryOne, run } = require('../database/db');
 
 class Order {
-    static getAll() {
-        const orders = db.prepare(`
+  static getAll() {
+    const orders = query(`
       SELECT o.*, t.table_number 
       FROM orders o
       JOIN tables t ON o.table_id = t.id
       ORDER BY o.created_at DESC
-    `).all();
+    `);
 
-        return orders.map(order => ({
-            ...order,
-            items: JSON.parse(order.items)
-        }));
-    }
+    return orders.map(order => ({
+      ...order,
+      items: JSON.parse(order.items)
+    }));
+  }
 
-    static getById(id) {
-        const order = db.prepare(`
+  static getById(id) {
+    const order = queryOne(`
       SELECT o.*, t.table_number 
       FROM orders o
       JOIN tables t ON o.table_id = t.id
       WHERE o.id = ?
-    `).get(id);
+    `, [id]);
 
-        if (!order) return null;
-        return {
-            ...order,
-            items: JSON.parse(order.items)
-        };
-    }
+    if (!order) return null;
+    return {
+      ...order,
+      items: JSON.parse(order.items)
+    };
+  }
 
-    static getByTable(tableId) {
-        const orders = db.prepare(`
+  static getByTable(tableId) {
+    const orders = query(`
       SELECT o.*, t.table_number 
       FROM orders o
       JOIN tables t ON o.table_id = t.id
       WHERE o.table_id = ?
       ORDER BY o.created_at DESC
-    `).all(tableId);
+    `, [tableId]);
 
-        return orders.map(order => ({
-            ...order,
-            items: JSON.parse(order.items)
-        }));
-    }
+    return orders.map(order => ({
+      ...order,
+      items: JSON.parse(order.items)
+    }));
+  }
 
-    static getActiveOrders() {
-        const orders = db.prepare(`
+  static getActiveOrders() {
+    const orders = query(`
       SELECT o.*, t.table_number 
       FROM orders o
       JOIN tables t ON o.table_id = t.id
@@ -59,116 +59,114 @@ class Order {
           WHEN 'served' THEN 4 
         END,
         o.created_at ASC
-    `).all();
+    `);
 
-        return orders.map(order => ({
-            ...order,
-            items: JSON.parse(order.items)
-        }));
-    }
+    return orders.map(order => ({
+      ...order,
+      items: JSON.parse(order.items)
+    }));
+  }
 
-    static create(tableId, items, notes = '') {
-        // Calculate total price
-        const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  static create(tableId, items, notes = '') {
+    // Calculate total price
+    const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-        const stmt = db.prepare(`
+    const result = run(`
       INSERT INTO orders (table_id, items, total_price, notes) 
       VALUES (?, ?, ?, ?)
-    `);
-        const result = stmt.run(tableId, JSON.stringify(items), totalPrice, notes);
+    `, [tableId, JSON.stringify(items), totalPrice, notes]);
 
-        // Update table status to occupied
-        db.prepare(`
+    // Update table status to occupied
+    run(`
       UPDATE tables SET status = 'occupied', updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(tableId);
+    `, [tableId]);
 
-        return this.getById(result.lastInsertRowid);
+    return this.getById(result.lastInsertRowid);
+  }
+
+  static update(id, data) {
+    const order = this.getById(id);
+    if (!order) return null;
+
+    const { items, notes, status } = data;
+    let totalPrice = order.total_price;
+
+    if (items) {
+      totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     }
 
-    static update(id, data) {
-        const order = this.getById(id);
-        if (!order) return null;
-
-        const { items, notes, status } = data;
-        let totalPrice = order.total_price;
-
-        if (items) {
-            totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        }
-
-        const stmt = db.prepare(`
+    run(`
       UPDATE orders 
-      SET items = COALESCE(?, items),
-          notes = COALESCE(?, notes),
-          status = COALESCE(?, status),
+      SET items = ?,
+          notes = ?,
+          status = ?,
           total_price = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `);
-        stmt.run(
-            items ? JSON.stringify(items) : null,
-            notes,
-            status,
-            totalPrice,
-            id
-        );
+    `, [
+      items ? JSON.stringify(items) : JSON.stringify(order.items),
+      notes ?? order.notes,
+      status ?? order.status,
+      totalPrice,
+      id
+    ]);
 
-        return this.getById(id);
-    }
+    return this.getById(id);
+  }
 
-    static updateStatus(id, status) {
-        const order = this.getById(id);
-        if (!order) return null;
+  static updateStatus(id, status) {
+    const order = this.getById(id);
+    if (!order) return null;
 
-        db.prepare(`
+    run(`
       UPDATE orders 
       SET status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(status, id);
+    `, [status, id]);
 
-        // If order is paid, check if table should be set to available
-        if (status === 'paid') {
-            const activeOrders = db.prepare(`
+    // If order is paid, check if table should be set to available
+    if (status === 'paid') {
+      const activeOrders = queryOne(`
         SELECT COUNT(*) as count FROM orders 
         WHERE table_id = ? AND status NOT IN ('paid') AND id != ?
-      `).get(order.table_id, id);
+      `, [order.table_id, id]);
 
-            if (activeOrders.count === 0) {
-                db.prepare(`
+      if (!activeOrders || activeOrders.count === 0) {
+        run(`
           UPDATE tables SET status = 'available', updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
-        `).run(order.table_id);
-            }
-        }
-
-        return this.getById(id);
+        `, [order.table_id]);
+      }
     }
 
-    static delete(id) {
-        const order = this.getById(id);
-        if (!order) return null;
+    return this.getById(id);
+  }
 
-        db.prepare('DELETE FROM orders WHERE id = ?').run(id);
+  static delete(id) {
+    const order = this.getById(id);
+    if (!order) return null;
 
-        // Check if table should be set to available
-        const activeOrders = db.prepare(`
+    run('DELETE FROM orders WHERE id = ?', [id]);
+
+    // Check if table should be set to available
+    const activeOrders = queryOne(`
       SELECT COUNT(*) as count FROM orders 
       WHERE table_id = ? AND status NOT IN ('paid')
-    `).get(order.table_id);
+    `, [order.table_id]);
 
-        if (activeOrders.count === 0) {
-            db.prepare(`
+    if (!activeOrders || activeOrders.count === 0) {
+      run(`
         UPDATE tables SET status = 'available', updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `).run(order.table_id);
-        }
-
-        return order;
+      `, [order.table_id]);
     }
 
-    static getStats() {
-        return db.prepare(`
+    return order;
+  }
+
+  static getStats() {
+    return queryOne(`
       SELECT 
         COUNT(*) as total,
         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
@@ -178,8 +176,8 @@ class Order {
         SUM(CASE WHEN status NOT IN ('paid') THEN total_price ELSE 0 END) as active_revenue,
         SUM(CASE WHEN status = 'paid' AND date(created_at) = date('now') THEN total_price ELSE 0 END) as today_revenue
       FROM orders
-    `).get();
-    }
+    `);
+  }
 }
 
 module.exports = Order;

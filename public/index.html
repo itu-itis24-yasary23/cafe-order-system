@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body>
   <div class="app-container">
     <!-- Sidebar Navigation -->
@@ -57,7 +59,7 @@
           <h1>Dashboard</h1>
           <p class="section-subtitle">Overview of your restaurant operations</p>
         </div>
-        
+
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-icon tables-icon">🪑</div>
@@ -137,7 +139,7 @@
             <span>➕</span> Add Table
           </button>
         </div>
-        
+
         <div class="table-legend">
           <span class="legend-item"><span class="legend-dot available"></span> Available</span>
           <span class="legend-item"><span class="legend-dot occupied"></span> Occupied</span>
@@ -269,24 +271,61 @@
       </div>
       <form id="order-form" onsubmit="handleOrderSubmit(event)">
         <input type="hidden" id="order-id">
+
+        <!-- Step 1: Select Table -->
+        <div class="order-step">
+          <div class="form-group">
+            <label for="order-table">Select Table</label>
+            <div id="order-table-grid" class="order-table-grid">
+              <!-- Tables will be loaded here as clickable cards -->
+            </div>
+            <input type="hidden" id="order-table" required>
+          </div>
+        </div>
+
         <div class="order-form-grid">
+          <!-- Left: Category tabs and menu items -->
           <div class="order-left">
             <div class="form-group">
-              <label for="order-table">Select Table</label>
-              <select id="order-table" required>
-                <option value="">Choose a table...</option>
-              </select>
+              <label>Select Category</label>
+              <div id="order-category-tabs" class="order-category-tabs">
+                <button type="button" class="order-cat-btn active" data-category="drinks">
+                  <span class="cat-icon">🍹</span>
+                  <span class="cat-name">Drinks</span>
+                </button>
+                <button type="button" class="order-cat-btn" data-category="appetizers">
+                  <span class="cat-icon">🥗</span>
+                  <span class="cat-name">Appetizers</span>
+                </button>
+                <button type="button" class="order-cat-btn" data-category="main_course">
+                  <span class="cat-icon">🍽️</span>
+                  <span class="cat-name">Main</span>
+                </button>
+                <button type="button" class="order-cat-btn" data-category="desserts">
+                  <span class="cat-icon">🍰</span>
+                  <span class="cat-name">Desserts</span>
+                </button>
+                <button type="button" class="order-cat-btn" data-category="sides">
+                  <span class="cat-icon">🍟</span>
+                  <span class="cat-name">Sides</span>
+                </button>
+              </div>
             </div>
             <div class="form-group">
-              <label>Add Items to Order</label>
+              <label>Items in <span id="current-category-label">Drinks</span></label>
               <div id="order-menu-items" class="order-menu-items">
-                <!-- Menu items will be loaded here -->
+                <!-- Menu items will be loaded here based on selected category -->
               </div>
             </div>
           </div>
+
+          <!-- Right: Order summary -->
           <div class="order-right">
             <div class="order-summary">
               <h3>Order Summary</h3>
+              <div class="selected-table-info" id="selected-table-info">
+                <span class="table-badge">No table selected</span>
+              </div>
               <div id="order-items-list" class="order-items-list">
                 <p class="empty-state">No items added yet</p>
               </div>
@@ -344,4 +383,5 @@
 
   <script src="/js/app.js"></script>
 </body>
+
 </html>
