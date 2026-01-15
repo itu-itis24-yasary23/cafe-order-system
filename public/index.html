@@ -333,6 +333,29 @@
         <div class="order-form-grid">
           <!-- Left: Category tabs and menu items -->
           <div class="order-left">
+            <!-- Order Type & Table Selection -->
+            <div class="form-group">
+              <label>Order Type</label>
+              <div class="order-type-selector">
+                <label class="type-option active">
+                  <input type="radio" name="orderType" value="dine_in" checked onchange="toggleOrderType(this.value)">
+                  <span class="icon">🍽️</span> Dine In
+                </label>
+                <label class="type-option">
+                  <input type="radio" name="orderType" value="delivery" onchange="toggleOrderType(this.value)">
+                  <span class="icon">🛵</span> Delivery
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group" id="table-selection-group">
+              <label>Select Table</label>
+              <input type="hidden" id="order-table" required>
+              <div id="order-table-grid" class="table-grid-small">
+                <!-- Tables loaded via JS -->
+              </div>
+            </div>
+
             <div class="form-group">
               <label>Select Category</label>
               <div id="order-category-tabs" class="order-category-tabs">

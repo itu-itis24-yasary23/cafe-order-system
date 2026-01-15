@@ -345,11 +345,260 @@ async function loadOrders() {
     }
 }
 
-// ... getOrderActionButtons remains same ...
+function getOrderActionButtons(order) {
+    const buttons = [];
 
-// ... openNewOrderModal modifications were done in previous step (though failed via tool, I'll retry that part separately or here if needed, but keeping this focussed on render) 
+    if (order.status !== 'paid') {
+        const nextStatusMap = {
+            'pending': 'preparing',
+            'preparing': 'ready',
+            'ready': 'served',
+            'served': 'paid'
+        };
 
-// Need to update handleOrderSubmit
+        const nextStatus = nextStatusMap[order.status];
+        if (nextStatus) {
+            buttons.push(`
+        <button class="btn-next-status" onclick="updateOrderStatus(${order.id}, '${nextStatus}')">
+          Mark as ${nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}
+        </button>
+      `);
+        }
+
+        if (order.status !== 'paid') {
+            buttons.push(`
+        <button class="btn-paid" onclick="updateOrderStatus(${order.id}, 'paid')">
+          💰 Mark Paid
+        </button>
+      `);
+        }
+    }
+
+    buttons.push(`
+    <button class="btn-delete" onclick="confirmDeleteOrder(${order.id})">Delete</button>
+  `);
+
+    return buttons.join('');
+}
+
+// State for order modal
+let selectedTableId = null;
+let currentCategory = 'drinks';
+
+async function openNewOrderModal() {
+    currentOrderItems = [];
+    selectedTableId = null;
+    currentCategory = 'drinks';
+
+    try {
+        // Load available tables and menu items
+        const [tablesData, menuData] = await Promise.all([
+            fetch(`${API_BASE}/tables`).then(r => r.json()),
+            fetch(`${API_BASE}/menu/available`).then(r => r.json())
+        ]);
+
+        menuItems = menuData;
+
+        // Populate table grid (clickable cards instead of dropdown)
+        const tableGrid = document.getElementById('order-table-grid');
+        tableGrid.innerHTML = tablesData.map(t => `
+            <div class="order-table-card ${t.status}" data-table-id="${t.id}" onclick="selectTable(${t.id}, ${t.table_number})">
+                <span class="table-num">${t.table_number}</span>
+                <span class="table-info">${t.status}</span>
+            </div>
+        `).join('');
+
+        // Setup category tab handlers
+        const categoryTabs = document.querySelectorAll('.order-cat-btn');
+        categoryTabs.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                categoryTabs.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategory = btn.dataset.category;
+                renderOrderMenuItems(menuData, currentCategory);
+            });
+        });
+
+        // Set first category as active
+        categoryTabs.forEach(btn => {
+            if (btn.dataset.category === 'drinks') {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Render menu items for the default category
+        renderOrderMenuItems(menuData, currentCategory);
+
+        // Reset form
+        document.getElementById('order-table').value = '';
+        document.getElementById('order-id').value = '';
+        document.getElementById('order-notes').value = '';
+        document.getElementById('order-modal-title').textContent = 'New Order';
+
+        // Reset Order Type
+        const dineInRadio = document.querySelector('input[name="orderType"][value="dine_in"]');
+        if (dineInRadio) {
+            dineInRadio.checked = true;
+            toggleOrderType('dine_in');
+        }
+
+        // Reset selected table display
+        updateSelectedTableDisplay();
+        updateOrderSummary();
+
+        document.getElementById('order-modal').classList.add('active');
+
+    } catch (error) {
+        console.error('Error opening order modal:', error);
+        showToast('Error loading data', 'error');
+    }
+}
+
+function toggleOrderType(type) {
+    const tableGroup = document.getElementById('table-selection-group');
+    const tableInput = document.getElementById('order-table');
+    const tableDisplay = document.getElementById('selected-table-info');
+
+    if (type === 'delivery') {
+        if (tableGroup) tableGroup.style.display = 'none';
+        tableInput.value = ''; // No table for delivery
+        tableInput.required = false;
+
+        // Update display to show Delivery
+        const container = document.getElementById('selected-table-info');
+        container.classList.add('has-table');
+        container.innerHTML = `<span class="table-badge delivery-badge">🛵 Delivery Order</span>`;
+
+        // Clear selected table visually
+        selectedTableId = null;
+        document.querySelectorAll('.order-table-card').forEach(c => c.classList.remove('selected'));
+    } else {
+        if (tableGroup) tableGroup.style.display = 'block';
+        tableInput.required = true;
+
+        // Reset display
+        updateSelectedTableDisplay(selectedTableId ? document.querySelector(`.order-table-card[data-table-id="${selectedTableId}"] .table-num`)?.textContent : null);
+    }
+}
+
+function selectTable(tableId, tableNumber) {
+    selectedTableId = tableId;
+    document.getElementById('order-table').value = tableId;
+
+    // Update visual selection
+    document.querySelectorAll('.order-table-card').forEach(card => {
+        card.classList.remove('selected');
+        if (parseInt(card.dataset.tableId) === tableId) {
+            card.classList.add('selected');
+        }
+    });
+
+    updateSelectedTableDisplay(tableNumber);
+}
+
+function updateSelectedTableDisplay(tableNumber = null) {
+    const container = document.getElementById('selected-table-info');
+    if (tableNumber) {
+        container.classList.add('has-table');
+        container.innerHTML = `<span class="table-badge">📍 Table ${tableNumber}</span>`;
+    } else {
+        container.classList.remove('has-table');
+        container.innerHTML = `<span class="table-badge">No table selected</span>`;
+    }
+}
+
+function renderOrderMenuItems(items, category) {
+    const container = document.getElementById('order-menu-items');
+    const categoryLabel = document.getElementById('current-category-label');
+
+    categoryLabel.textContent = formatCategory(category);
+
+    const filtered = items.filter(item => item.category === category);
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="empty-state">No items in this category</p>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(item => `
+        <div class="order-menu-item ${item.available ? '' : 'unavailable'}">
+            <div class="order-menu-item-name">${item.name}</div>
+            <div class="order-menu-item-price">${item.price.toFixed(0)} ₺</div>
+            <button type="button" class="order-menu-item-add" onclick="addToOrder(${item.id})">
+                + Add
+            </button>
+        </div>
+    `).join('');
+}
+
+function addToOrder(menuItemId) {
+    const item = menuItems.find(m => m.id === menuItemId);
+    if (!item) return;
+
+    const existing = currentOrderItems.find(i => i.id === menuItemId);
+    if (existing) {
+        existing.quantity++;
+    } else {
+        currentOrderItems.push({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            category: item.category,
+            quantity: 1
+        });
+    }
+
+    updateOrderSummary();
+}
+
+function removeFromOrder(menuItemId) {
+    currentOrderItems = currentOrderItems.filter(i => i.id !== menuItemId);
+    updateOrderSummary();
+}
+
+function updateItemQuantity(menuItemId, delta) {
+    const item = currentOrderItems.find(i => i.id === menuItemId);
+    if (!item) return;
+
+    item.quantity += delta;
+    if (item.quantity <= 0) {
+        removeFromOrder(menuItemId);
+    } else {
+        updateOrderSummary();
+    }
+}
+
+function updateOrderSummary() {
+    const container = document.getElementById('order-items-list');
+    const totalEl = document.getElementById('order-total-price');
+
+    if (currentOrderItems.length === 0) {
+        container.innerHTML = '<p class="empty-state">No items added yet</p>';
+        totalEl.textContent = '0 ₺';
+        return;
+    }
+
+    container.innerHTML = currentOrderItems.map(item => `
+    <div class="order-summary-item">
+      <div class="order-summary-item-info">
+        <div class="order-summary-item-qty">
+          <button class="qty-btn" onclick="updateItemQuantity(${item.id}, -1)">-</button>
+          <span>${item.quantity}</span>
+          <button class="qty-btn" onclick="updateItemQuantity(${item.id}, 1)">+</button>
+        </div>
+        <span class="order-summary-item-name">${item.name}</span>
+      </div>
+      <span class="order-summary-item-price">${(item.price * item.quantity).toFixed(0)} ₺</span>
+      <button class="order-summary-item-remove" onclick="removeFromOrder(${item.id})">×</button>
+    </div>
+  `).join('');
+
+    const total = currentOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    totalEl.textContent = `${total.toFixed(0)} ₺`;
+}
 async function handleOrderSubmit(e) {
     e.preventDefault();
 
