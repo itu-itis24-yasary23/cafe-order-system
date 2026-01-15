@@ -108,7 +108,7 @@ async function loadDashboard() {
         tablesContainer.innerHTML = allTables.map(table => `
       <div class="table-mini ${table.status}" onclick="showSection('tables')">
         <span class="table-mini-number">${table.table_number}</span>
-        <span class="table-mini-capacity">${table.capacity} seats</span>
+        <span class="table-mini-status">${table.status}</span>
       </div>
     `).join('');
 
@@ -136,7 +136,6 @@ async function loadTables() {
         container.innerHTML = tables.map(table => `
       <div class="table-card ${table.status}">
         <div class="table-number">${table.table_number}</div>
-        <div class="table-capacity">👥 ${table.capacity} seats</div>
         <span class="table-status ${table.status}">${table.status}</span>
         <div class="table-actions">
           <button class="btn-status" onclick="cycleTableStatus(${table.id}, '${table.status}')">
@@ -168,7 +167,6 @@ function openTableModal(tableId = null) {
         if (table) {
             document.getElementById('table-id').value = table.id;
             document.getElementById('table-number').value = table.table_number;
-            document.getElementById('table-capacity').value = table.capacity;
         }
     } else {
         title.textContent = 'Add New Table';
@@ -186,7 +184,6 @@ async function handleTableSubmit(e) {
 
     const tableId = document.getElementById('table-id').value;
     const tableNumber = parseInt(document.getElementById('table-number').value);
-    const capacity = parseInt(document.getElementById('table-capacity').value);
 
     try {
         let response;
@@ -194,13 +191,13 @@ async function handleTableSubmit(e) {
             response = await fetch(`${API_BASE}/tables/${tableId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ table_number: tableNumber, capacity })
+                body: JSON.stringify({ table_number: tableNumber })
             });
         } else {
             response = await fetch(`${API_BASE}/tables`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ table_number: tableNumber, capacity })
+                body: JSON.stringify({ table_number: tableNumber })
             });
         }
 
@@ -402,7 +399,7 @@ async function openNewOrderModal() {
         tableGrid.innerHTML = tablesData.map(t => `
             <div class="order-table-card ${t.status}" data-table-id="${t.id}" onclick="selectTable(${t.id}, ${t.table_number})">
                 <span class="table-num">${t.table_number}</span>
-                <span class="table-info">${t.capacity} seats • ${t.status}</span>
+                <span class="table-info">${t.status}</span>
             </div>
         `).join('');
 

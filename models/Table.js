@@ -23,29 +23,27 @@ class Table {
     return queryOne('SELECT * FROM tables WHERE table_number = ?', [tableNumber]);
   }
 
-  static create(tableNumber, capacity = 4) {
+  static create(tableNumber) {
     const result = run(
-      'INSERT INTO tables (table_number, capacity) VALUES (?, ?)',
-      [tableNumber, capacity]
+      'INSERT INTO tables (table_number) VALUES (?)',
+      [tableNumber]
     );
     return this.getById(result.lastInsertRowid);
   }
 
   static update(id, data) {
-    const { table_number, capacity, status } = data;
+    const { table_number, status } = data;
     const current = this.getById(id);
     if (!current) return null;
 
     run(`
       UPDATE tables 
       SET table_number = ?,
-          capacity = ?,
           status = ?,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [
       table_number ?? current.table_number,
-      capacity ?? current.capacity,
       status ?? current.status,
       id
     ]);

@@ -38,7 +38,7 @@ router.get('/:id', (req, res) => {
 // POST /api/tables - Create new table
 router.post('/', (req, res) => {
     try {
-        const { table_number, capacity } = req.body;
+        const { table_number } = req.body;
 
         if (!table_number) {
             return res.status(400).json({ error: 'Table number is required' });
@@ -50,7 +50,7 @@ router.post('/', (req, res) => {
             return res.status(400).json({ error: 'Table number already exists' });
         }
 
-        const table = Table.create(table_number, capacity || 4);
+        const table = Table.create(table_number);
         res.status(201).json(table);
     } catch (error) {
         res.status(500).json({ error: error.message });

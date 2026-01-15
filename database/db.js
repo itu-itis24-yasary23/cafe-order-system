@@ -18,7 +18,6 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS tables (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       table_number INTEGER UNIQUE NOT NULL,
-      capacity INTEGER NOT NULL DEFAULT 4,
       status TEXT NOT NULL DEFAULT 'available' CHECK(status IN ('available', 'occupied', 'reserved')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -54,11 +53,9 @@ async function initDB() {
   `);
 
   // Seed tables
-  const tablesData = [
-    [1, 2], [2, 2], [3, 4], [4, 4], [5, 6], [6, 6], [7, 8], [8, 4]
-  ];
-  tablesData.forEach(([num, cap]) => {
-    db.run('INSERT INTO tables (table_number, capacity) VALUES (?, ?)', [num, cap]);
+  const tablesData = [1, 2, 3, 4, 5, 6, 7, 8];
+  tablesData.forEach(num => {
+    db.run('INSERT INTO tables (table_number) VALUES (?)', [num]);
   });
   console.log('✅ Initial tables created');
 
