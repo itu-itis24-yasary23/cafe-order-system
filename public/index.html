@@ -155,9 +155,14 @@
       <section id="orders-section" class="section">
         <div class="section-header">
           <h1>Orders Management</h1>
-          <button class="btn-primary" onclick="openNewOrderModal()">
-            <span>➕</span> New Order
-          </button>
+          <div class="section-header-actions">
+            <button class="btn-secondary" onclick="openZReport()">
+              <span>📊</span> Z-Report
+            </button>
+            <button class="btn-primary" onclick="openNewOrderModal()">
+              <span>➕</span> New Order
+            </button>
+          </div>
         </div>
 
         <div class="orders-filters">
@@ -430,6 +435,68 @@
       <div class="form-actions">
         <button class="btn-secondary" onclick="closeModal('confirm-modal')">Cancel</button>
         <button id="confirm-btn" class="btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Z-Report Modal -->
+  <div id="zreport-modal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>📊 Z-Report - Daily Summary</h2>
+        <button class="close-btn" onclick="closeModal('zreport-modal')">&times;</button>
+      </div>
+      <div class="zreport-content">
+        <div class="zreport-date-selector">
+          <label for="zreport-date">Select Date:</label>
+          <input type="date" id="zreport-date" onchange="loadZReport()">
+          <button class="btn-secondary" onclick="loadZReport()">🔄 Refresh</button>
+        </div>
+
+        <div class="zreport-summary">
+          <div class="zreport-stat-card">
+            <span class="zreport-stat-icon">📝</span>
+            <div class="zreport-stat-info">
+              <span class="zreport-stat-value" id="zreport-total-orders">0</span>
+              <span class="zreport-stat-label">Total Orders</span>
+            </div>
+          </div>
+          <div class="zreport-stat-card revenue">
+            <span class="zreport-stat-icon">💰</span>
+            <div class="zreport-stat-info">
+              <span class="zreport-stat-value" id="zreport-total-revenue">0 ₺</span>
+              <span class="zreport-stat-label">Total Revenue</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="zreport-sections">
+          <div class="zreport-section">
+            <h3>📦 Category Breakdown</h3>
+            <div id="zreport-categories" class="zreport-categories">
+              <p class="empty-state">Loading...</p>
+            </div>
+          </div>
+
+          <div class="zreport-section">
+            <h3>📋 Order Status</h3>
+            <div id="zreport-status" class="zreport-status">
+              <p class="empty-state">Loading...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="zreport-section full-width">
+          <h3>🏆 Top Selling Items</h3>
+          <div id="zreport-items" class="zreport-items-table">
+            <p class="empty-state">Loading...</p>
+          </div>
+        </div>
+
+        <div class="zreport-footer">
+          <span id="zreport-generated">Generated: --</span>
+          <button class="btn-primary" onclick="printZReport()">🖨️ Print Report</button>
+        </div>
       </div>
     </div>
   </div>

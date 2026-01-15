@@ -33,6 +33,85 @@ router.get('/stats', (req, res) => {
     }
 });
 
+// GET /api/orders/z-report - Get Z-Report (end of day report)
+router.get('/z-report', (req, res) => {
+    try {
+        // Get date parameter or use today
+        const dateParam = req.query.date;
+        const targetDate = dateParam || new Date().toISOString().split('T')[0];
+
+        const orders = Order.getAll();
+
+        // Filter orders for the target date
+        const dayOrders = orders.filter(order => {
+            const orderDate = order.created_at.split(' ')[0];
+            return orderDate === targetDate;
+        });
+
+        // Calculate statistics
+        const totalOrders = dayOrders.length;
+        const totalRevenue = dayOrders.reduce((sum, order) => sum + (order.total_price || 0), 0);
+
+        // Count items and categories
+        const itemCounts = {};
+        const categoryCounts = {
+            drinks: 0,
+            appetizers: 0,
+            main_course: 0,
+            desserts: 0,
+            sides: 0
+        };
+
+        dayOrders.forEach(order => {
+            if (order.items && Array.isArray(order.items)) {
+                order.items.forEach(item => {
+                    // Count individual items
+                    const itemName = item.name;
+                    if (!itemCounts[itemName]) {
+                        itemCounts[itemName] = {
+                            name: itemName,
+                            quantity: 0,
+                            revenue: 0,
+                            category: item.category || 'unknown'
+                        };
+                    }
+                    itemCounts[itemName].quantity += item.quantity;
+                    itemCounts[itemName].revenue += item.price * item.quantity;
+
+                    // Count by category
+                    if (item.category && categoryCounts.hasOwnProperty(item.category)) {
+                        categoryCounts[item.category] += item.quantity;
+                    }
+                });
+            }
+        });
+
+        // Convert itemCounts to sorted array
+        const itemsArray = Object.values(itemCounts).sort((a, b) => b.quantity - a.quantity);
+
+        // Order status breakdown
+        const statusBreakdown = {
+            pending: dayOrders.filter(o => o.status === 'pending').length,
+            preparing: dayOrders.filter(o => o.status === 'preparing').length,
+            ready: dayOrders.filter(o => o.status === 'ready').length,
+            served: dayOrders.filter(o => o.status === 'served').length,
+            paid: dayOrders.filter(o => o.status === 'paid').length
+        };
+
+        res.json({
+            date: targetDate,
+            totalOrders,
+            totalRevenue,
+            items: itemsArray,
+            categoryCounts,
+            statusBreakdown,
+            generatedAt: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // GET /api/orders/table/:tableId - Get orders for specific table
 router.get('/table/:tableId', (req, res) => {
     try {

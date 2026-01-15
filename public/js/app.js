@@ -1040,6 +1040,103 @@ function groupByCategory(items) {
     }, {});
 }
 
+// =====================================================
+// Z-REPORT
+// =====================================================
+function openZReport() {
+    const modal = document.getElementById('zreport-modal');
+    const dateInput = document.getElementById('zreport-date');
+
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+
+    modal.classList.add('active');
+    loadZReport();
+}
+
+async function loadZReport() {
+    const date = document.getElementById('zreport-date').value;
+    const itemsContainer = document.getElementById('zreport-items');
+    const categoriesContainer = document.getElementById('zreport-categories');
+    const statusContainer = document.getElementById('zreport-status');
+    const generatedEl = document.getElementById('zreport-generated');
+
+    try {
+        const response = await fetch(`${API_BASE}/orders/z-report?date=${date}`);
+        const report = await response.json();
+
+        // Update summary stats
+        document.getElementById('zreport-total-orders').textContent = report.totalOrders;
+        document.getElementById('zreport-total-revenue').textContent = `${report.totalRevenue.toFixed(0)} ₺`;
+
+        // Render Top Items
+        if (report.items.length === 0) {
+            itemsContainer.innerHTML = '<p class="empty-state">No items sold on this date.</p>';
+        } else {
+            itemsContainer.innerHTML = `
+                <table class="z-table">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Qty</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${report.items.map(item => `
+                            <tr>
+                                <td class="z-stat-name">${item.name}</td>
+                                <td>${getCategoryEmoji(item.category)} ${formatCategory(item.category)}</td>
+                                <td class="z-stat-count">${item.quantity}</td>
+                                <td>${item.revenue.toFixed(0)} ₺</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Render Category Breakdown
+        const categoriesHtml = Object.entries(report.categoryCounts)
+            .map(([cat, count]) => {
+                if (count === 0) return '';
+                return `
+                    <div class="z-stat-row">
+                        <span class="z-stat-name">${getCategoryEmoji(cat)} ${formatCategory(cat)}</span>
+                        <span class="z-stat-count">${count} items</span>
+                    </div>
+                `;
+            }).join('');
+
+        categoriesContainer.innerHTML = categoriesHtml || '<p class="empty-state">No sales yet.</p>';
+
+        // Render Order Status
+        const statusHtml = Object.entries(report.statusBreakdown)
+            .map(([status, count]) => `
+                <div class="z-stat-row">
+                    <span class="z-stat-name">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
+                    <span class="z-stat-count">${count}</span>
+                </div>
+            `).join('');
+
+        statusContainer.innerHTML = statusHtml;
+
+        // Update timestamp
+        const genDate = new Date(report.generatedAt);
+        generatedEl.textContent = `Generated: ${genDate.toLocaleDateString()} ${genDate.toLocaleTimeString()}`;
+
+    } catch (error) {
+        console.error('Error loading Z-Report:', error);
+        showToast('Error loading report', 'error');
+    }
+}
+
+function printZReport() {
+    window.print();
+}
+
 // Close modals on outside click
 document.querySelectorAll('.modal').forEach(modal => {
     modal.addEventListener('click', (e) => {
