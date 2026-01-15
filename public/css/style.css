@@ -2175,50 +2175,44 @@ form {
 
 /* Print Styles */
 @media print {
-  body * {
-    visibility: hidden;
+
+  /* HIDE EVERYTHING by default */
+  body>* {
+    display: none !important;
   }
 
-  #zreport-modal,
-  #zreport-modal * {
-    visibility: visible;
-  }
-
+  /* Only show the Z-Report modal, but treat it as the main content */
   #zreport-modal {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: white;
-    color: black;
-    padding: 0;
+    display: block !important;
+    position: static !important;
+    background: white !important;
+    width: 100% !important;
+    height: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    overflow: visible !important;
   }
 
-  .modal-content {
-    background: white;
-    color: black;
-    box-shadow: none;
-    max-width: 100%;
-    width: 100%;
-    padding: 20px;
+  /* Reset Modal Structure for Print */
+  #zreport-modal .modal-content {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    background: white !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
   }
 
-  .zreport-stat-value,
-  .zreport-section h3,
-  .z-stat-count,
-  .z-table th {
-    color: black !important;
-  }
-
-  .z-stat-name,
-  .zreport-stat-label,
-  .zreport-generated {
-    color: #444 !important;
-  }
-
+  /* Hide UI specific elements */
+  .modal-header .close-btn,
+  .zreport-date-selector,
+  .zreport-footer button,
   .btn-primary,
-  .btn-secondary,
   .close-btn,
   .zreport-date-selector button {
     display: none !important;
