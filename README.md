@@ -35,34 +35,47 @@ A modern, full-stack business process automation system for cafes and restaurant
 - Today's revenue tracking
 - Quick action buttons
 
-## 🚀 Quick Start
+## 🚀 Running Locally from Scratch
 
-### Prerequisites
-- Node.js 18 or higher
-- npm
+Follow these steps to set up and run the application on a new computer.
 
-### Installation
+### 1. Install Prerequisites
+Before you begin, ensure you have the following installed:
 
-1. Clone the repository:
+- **Node.js** (v18 or higher): [Download here](https://nodejs.org/)
+- **Git**: [Download here](https://git-scm.com/downloads)
+
+### 2. Clone the Repository
+Open your terminal (Command Prompt, PowerShell, or Terminal) and run:
+
 ```bash
-git clone https://github.com/yourusername/cafe-order-system.git
+# Clone the project to your local machine
+git clone https://github.com/itu-itis24-yasary23/cafe-order-system.git
+
+# Navigate into the project directory
 cd cafe-order-system
 ```
 
-2. Install dependencies:
+### 3. Install Dependencies
+Install the necessary software packages by running:
+
 ```bash
 npm install
 ```
 
-3. Start the server:
+### 4. Start the Application
+Launch the server with the following command:
+
 ```bash
 npm start
 ```
 
-4. Open your browser and navigate to:
-```
-http://localhost:3000
-```
+You should see output indicating the server is running (e.g., `Server running on port 3000`).
+
+### 5. Access the App
+Open your web browser (Chrome, Firefox, Safari) and visit:
+
+[http://localhost:3000](http://localhost:3000)
 
 ## 📁 Project Structure
 
