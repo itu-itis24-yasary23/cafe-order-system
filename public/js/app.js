@@ -509,6 +509,7 @@ function addToOrder(menuItemId) {
             id: item.id,
             name: item.name,
             price: item.price,
+            category: item.category,
             quantity: 1
         });
     }

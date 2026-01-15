@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Table = require('../models/Table');
+const MenuItem = require('../models/MenuItem');
 
 // GET /api/orders - Get all orders
 router.get('/', (req, res) => {
@@ -41,6 +42,15 @@ router.get('/z-report', (req, res) => {
         const targetDate = dateParam || new Date().toISOString().split('T')[0];
 
         const orders = Order.getAll();
+        const menuItems = MenuItem.getAll();
+
+        // Create item details lookup map (name -> category)
+        // We use name as fallback because ID might not be reliable in legacy order JSONs, 
+        // but ideally we should use ID. Let's use name for now as it maps to what we display.
+        const itemCategoryMap = {};
+        menuItems.forEach(item => {
+            itemCategoryMap[item.name] = item.category;
+        });
 
         // Filter orders for the target date
         const dayOrders = orders.filter(order => {
@@ -54,34 +64,32 @@ router.get('/z-report', (req, res) => {
 
         // Count items and categories
         const itemCounts = {};
-        const categoryCounts = {
-            drinks: 0,
-            appetizers: 0,
-            main_course: 0,
-            desserts: 0,
-            sides: 0
-        };
+        const categoryCounts = {}; // Dynamic object, no hardcoding
 
         dayOrders.forEach(order => {
             if (order.items && Array.isArray(order.items)) {
                 order.items.forEach(item => {
                     // Count individual items
                     const itemName = item.name;
+                    // Determine category: use stored one, or lookup from current menu
+                    const category = item.category || itemCategoryMap[itemName] || 'uncategorized';
+
                     if (!itemCounts[itemName]) {
                         itemCounts[itemName] = {
                             name: itemName,
                             quantity: 0,
                             revenue: 0,
-                            category: item.category || 'unknown'
+                            category: category
                         };
                     }
                     itemCounts[itemName].quantity += item.quantity;
                     itemCounts[itemName].revenue += item.price * item.quantity;
 
                     // Count by category
-                    if (item.category && categoryCounts.hasOwnProperty(item.category)) {
-                        categoryCounts[item.category] += item.quantity;
+                    if (!categoryCounts[category]) {
+                        categoryCounts[category] = 0;
                     }
+                    categoryCounts[category] += item.quantity;
                 });
             }
         });
