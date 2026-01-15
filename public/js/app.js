@@ -402,9 +402,8 @@ async function openNewOrderModal() {
         // Populate table grid (clickable cards instead of dropdown)
         const tableGrid = document.getElementById('order-table-grid');
         tableGrid.innerHTML = tablesData.map(t => `
-            <div class="order-table-card ${t.status}" data-table-id="${t.id}" onclick="selectTable(${t.id}, ${t.table_number})">
+            <div class="order-table-card ${t.status}" data-table-id="${t.id}" onclick="selectTable(${t.id}, ${t.table_number})" title="${t.status}">
                 <span class="table-num">${t.table_number}</span>
-                <span class="table-info">${t.status}</span>
             </div>
         `).join('');
 
