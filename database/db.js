@@ -10,13 +10,8 @@ let db = null;
 async function initDB() {
   const SQL = await initSqlJs();
 
-  // Try to load existing database
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buffer);
-  } else {
-    db = new SQL.Database();
-  }
+  // Always create fresh database for new menu items
+  db = new SQL.Database();
 
   // Create tables
   db.run(`
@@ -58,55 +53,75 @@ async function initDB() {
     )
   `);
 
-  // Seed initial data if tables are empty
-  const tableCount = db.exec('SELECT COUNT(*) as count FROM tables')[0];
-  if (!tableCount || tableCount.values[0][0] === 0) {
-    const tablesData = [
-      [1, 2], [2, 2], [3, 4], [4, 4], [5, 6], [6, 6], [7, 8], [8, 4]
-    ];
-    tablesData.forEach(([num, cap]) => {
-      db.run('INSERT INTO tables (table_number, capacity) VALUES (?, ?)', [num, cap]);
-    });
-    console.log('✅ Initial tables created');
-  }
+  // Seed tables
+  const tablesData = [
+    [1, 2], [2, 2], [3, 4], [4, 4], [5, 6], [6, 6], [7, 8], [8, 4]
+  ];
+  tablesData.forEach(([num, cap]) => {
+    db.run('INSERT INTO tables (table_number, capacity) VALUES (?, ?)', [num, cap]);
+  });
+  console.log('✅ Initial tables created');
 
-  // Seed menu items if empty
-  const menuCount = db.exec('SELECT COUNT(*) as count FROM menu_items')[0];
-  if (!menuCount || menuCount.values[0][0] === 0) {
-    const menuData = [
-      // Drinks
-      ['Espresso', 'Rich and bold single shot', 3.50, 'drinks'],
-      ['Cappuccino', 'Espresso with steamed milk and foam', 4.50, 'drinks'],
-      ['Latte', 'Smooth espresso with velvety milk', 5.00, 'drinks'],
-      ['Fresh Orange Juice', 'Freshly squeezed oranges', 4.00, 'drinks'],
-      ['Iced Tea', 'Refreshing house-made iced tea', 3.00, 'drinks'],
-      // Appetizers
-      ['Bruschetta', 'Toasted bread with tomatoes and basil', 8.00, 'appetizers'],
-      ['Soup of the Day', 'Ask your server for today\'s selection', 6.50, 'appetizers'],
-      ['Caesar Salad', 'Crisp romaine with parmesan and croutons', 9.00, 'appetizers'],
-      ['Garlic Bread', 'Warm bread with garlic butter', 5.00, 'appetizers'],
-      // Main Course
-      ['Grilled Salmon', 'Atlantic salmon with lemon herb butter', 22.00, 'main_course'],
-      ['Chicken Parmesan', 'Breaded chicken with marinara and mozzarella', 18.00, 'main_course'],
-      ['Beef Burger', 'Angus beef with lettuce, tomato, and special sauce', 15.00, 'main_course'],
-      ['Pasta Carbonara', 'Creamy pasta with bacon and parmesan', 16.00, 'main_course'],
-      ['Vegetable Stir Fry', 'Fresh seasonal vegetables in savory sauce', 14.00, 'main_course'],
-      // Desserts
-      ['Tiramisu', 'Classic Italian coffee dessert', 8.00, 'desserts'],
-      ['Chocolate Lava Cake', 'Warm cake with molten chocolate center', 9.00, 'desserts'],
-      ['Cheesecake', 'New York style with berry compote', 7.50, 'desserts'],
-      ['Ice Cream', 'Three scoops of your choice', 6.00, 'desserts'],
-      // Sides
-      ['French Fries', 'Crispy golden fries', 4.50, 'sides'],
-      ['Mashed Potatoes', 'Creamy buttery potatoes', 4.00, 'sides'],
-      ['Grilled Vegetables', 'Seasonal vegetables', 5.00, 'sides']
-    ];
-    menuData.forEach(([name, desc, price, cat]) => {
-      db.run('INSERT INTO menu_items (name, description, price, category) VALUES (?, ?, ?, ?)',
-        [name, desc, price, cat]);
-    });
-    console.log('✅ Initial menu items created');
-  }
+  // Seed menu items - matching reference website (posmaks.com/alticafe)
+  const menuData = [
+    // DRINKS - Hot Beverages
+    ['Çay', 'Traditional Turkish tea served in a classic glass', 2.50, 'drinks', '/images/cay.jpg'],
+    ['Fincan Çay', 'Premium cup tea with aromatic blend', 4.50, 'drinks', '/images/fincan-cay.jpg'],
+    ['Türk Kahvesi', 'Authentic Turkish coffee, rich and bold', 6.00, 'drinks', '/images/turk-kahvesi.jpg'],
+    ['Double Türk Kahvesi', 'Double shot Turkish coffee for extra strength', 7.50, 'drinks', '/images/double-turk.jpg'],
+    ['Espresso', 'Classic Italian espresso shot', 5.50, 'drinks', '/images/espresso.jpg'],
+    ['Double Espresso', 'Double shot espresso for coffee lovers', 7.00, 'drinks', '/images/double-espresso.jpg'],
+    ['Americano', 'Espresso with hot water, smooth and rich', 7.00, 'drinks', '/images/americano.jpg'],
+    ['Filtre Kahve', 'Freshly brewed filter coffee', 6.50, 'drinks', '/images/filtre-kahve.jpg'],
+
+    // DRINKS - Herbal Teas
+    ['Melisa Bitki Çayı', 'Melissa herbal tea, calming and refreshing', 7.00, 'drinks', '/images/melisa.jpg'],
+    ['Rezene Bitki Çayı', 'Fennel herbal tea, aromatic and soothing', 7.00, 'drinks', '/images/rezene.jpg'],
+    ['Adaçayı', 'Sage tea, earthy and therapeutic', 7.00, 'drinks', '/images/adacayi.jpg'],
+    ['Papatya Bitki Çayı', 'Chamomile herbal tea, relaxing blend', 7.00, 'drinks', '/images/papatya.jpg'],
+
+    // DRINKS - Soft Drinks
+    ['Coca Cola', 'Classic Coca Cola, ice cold', 3.50, 'drinks', '/images/coca-cola.jpg'],
+    ['Ice Tea Limon', 'Refreshing lemon iced tea', 3.50, 'drinks', '/images/ice-tea-limon.jpg'],
+    ['Ice Tea Şeftali', 'Sweet peach iced tea', 3.50, 'drinks', '/images/ice-tea-seftali.jpg'],
+    ['Limonlu Soda', 'Sparkling lemon soda', 3.00, 'drinks', '/images/limonlu-soda.jpg'],
+
+    // APPETIZERS - Toasts
+    ['Tost Kaşarlı', 'Classic cheese toast with melted kashar', 11.00, 'appetizers', '/images/tost-kasarli.jpg'],
+    ['Çift Kaşarlı Tost', 'Double cheese toast, extra cheesy', 12.00, 'appetizers', '/images/cift-kasarli.jpg'],
+    ['Tost Karışık', 'Mixed toast with cheese and sausage', 13.00, 'appetizers', '/images/tost-karisik.jpg'],
+
+    // MAIN COURSE - Burgers
+    ['Klasik Burger', 'Classic beef burger with fresh vegetables', 18.00, 'main_course', '/images/klasik-burger.jpg'],
+    ['Cheese Burger', 'Juicy burger with melted cheddar cheese', 19.00, 'main_course', '/images/cheese-burger.jpg'],
+    ['Mushroom Burger', 'Gourmet burger with sautéed mushrooms', 19.00, 'main_course', '/images/mushroom-burger.jpg'],
+
+    // MAIN COURSE - Pasta
+    ['Penne Arrabiata', 'Spicy tomato pasta with chili flakes', 18.00, 'main_course', '/images/penne-arrabiata.jpg'],
+    ['Spaghetti Al Pesto', 'Classic pasta with fresh basil pesto', 18.00, 'main_course', '/images/spaghetti-pesto.jpg'],
+    ['Fettuccine Alfredo', 'Creamy pasta with parmesan sauce', 19.00, 'main_course', '/images/fettuccine-alfredo.jpg'],
+
+    // MAIN COURSE - Chicken
+    ['Teriyaki Soslu Tavuk', 'Chicken with sweet teriyaki glaze', 18.00, 'main_course', '/images/teriyaki-tavuk.jpg'],
+    ['Meksika Soslu Tavuk', 'Chicken with spicy Mexican sauce', 18.00, 'main_course', '/images/meksika-tavuk.jpg'],
+    ['Thai Soslu Tavuk', 'Chicken with aromatic Thai sauce', 18.00, 'main_course', '/images/thai-tavuk.jpg'],
+
+    // SIDES - Salads
+    ['Ton Balıklı Salata', 'Fresh salad with premium tuna', 14.00, 'sides', '/images/ton-balikli.jpg'],
+    ['Çıtır Tavuk Salata', 'Crispy chicken on fresh greens', 14.50, 'sides', '/images/citir-tavuk.jpg'],
+    ['Sezar Salata', 'Classic Caesar salad with croutons', 16.00, 'sides', '/images/sezar-salata.jpg'],
+
+    // DESSERTS
+    ['San Sebastian', 'Creamy Basque cheesecake', 12.50, 'desserts', '/images/san-sebastian.jpg'],
+    ['Nutellalı San Sebastian', 'Cheesecake with Nutella swirl', 12.50, 'desserts', '/images/nutella-san-sebastian.jpg'],
+    ['Magnolia Muzlu', 'Classic banana magnolia pudding', 9.50, 'desserts', '/images/magnolia.jpg'],
+  ];
+
+  menuData.forEach(([name, desc, price, cat, img]) => {
+    db.run('INSERT INTO menu_items (name, description, price, category, image_url) VALUES (?, ?, ?, ?, ?)',
+      [name, desc, price, cat, img]);
+  });
+  console.log('✅ Turkish menu items created');
 
   saveDB();
   return db;

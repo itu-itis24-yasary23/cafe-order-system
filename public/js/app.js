@@ -734,8 +734,8 @@ function renderMenuNew(items) {
 
     container.innerHTML = filtered.map(item => `
         <div class="menu-card-new ${item.available ? '' : 'unavailable'}">
-            <div class="menu-card-image">
-                <span class="category-emoji">${getCategoryEmoji(item.category)}</span>
+            <div class="menu-card-image" ${item.image_url ? `style="background: url('${item.image_url}') center/cover no-repeat;"` : ''}>
+                ${!item.image_url ? `<span class="category-emoji">${getCategoryEmoji(item.category)}</span>` : ''}
                 ${!item.available ? '<span class="menu-card-unavailable-badge">Unavailable</span>' : ''}
             </div>
             <div class="menu-card-body">
