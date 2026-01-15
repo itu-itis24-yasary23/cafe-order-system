@@ -469,7 +469,7 @@ function toggleOrderType(type) {
         // Update display to show Delivery
         const container = document.getElementById('selected-table-info');
         container.classList.add('has-table');
-        container.innerHTML = `<span class="table-badge delivery-badge">🛵 Delivery Order</span>`;
+        container.innerHTML = `<span style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);">Delivery</span>`;
 
         // Clear selected table visually
         selectedTableId = null;
