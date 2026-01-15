@@ -1307,7 +1307,7 @@ async function loadZReport() {
 
         // Update timestamp
         const genDate = new Date(report.generatedAt);
-        generatedEl.textContent = `Generated: ${genDate.toLocaleDateString()} ${genDate.toLocaleTimeString()}`;
+        generatedEl.textContent = `Generated: ${genDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${genDate.toLocaleTimeString()}`;
 
     } catch (error) {
         console.error('Error loading Z-Report:', error);
