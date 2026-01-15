@@ -52,11 +52,12 @@ async function initDB() {
   db.run(`
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      table_id INTEGER NOT NULL,
+      table_id INTEGER,
       items TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'preparing', 'ready', 'served', 'paid')),
       total_price REAL NOT NULL DEFAULT 0,
       notes TEXT,
+      order_type TEXT NOT NULL DEFAULT 'dine_in' CHECK(order_type IN ('dine_in', 'delivery')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (table_id) REFERENCES tables(id) ON DELETE CASCADE
@@ -68,6 +69,8 @@ async function initDB() {
   tablesData.forEach(num => {
     db.run('INSERT INTO tables (table_number) VALUES (?)', [num]);
   });
+  // Create a special table for legacy or delivery if needed, though we made table_id nullable.
+  // Actually, let's just leave it nullable.
   console.log('✅ Initial tables created');
 
   // Seed categories

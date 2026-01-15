@@ -151,20 +151,24 @@ router.get('/:id', (req, res) => {
 // POST /api/orders - Create new order
 router.post('/', (req, res) => {
     try {
-        const { table_id, items, notes } = req.body;
+        const { table_id, items, notes, order_type } = req.body;
+        const type = order_type || 'dine_in'; // Default to dine_in
 
-        if (!table_id) {
-            return res.status(400).json({ error: 'Table ID is required' });
+        // Validate table_id only for dine_in
+        if (type === 'dine_in' && !table_id) {
+            return res.status(400).json({ error: 'Table ID is required for dine-in orders' });
         }
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ error: 'Items array is required and must not be empty' });
         }
 
-        // Validate table exists
-        const table = Table.getById(table_id);
-        if (!table) {
-            return res.status(404).json({ error: 'Table not found' });
+        // Validate table exists if provided
+        if (table_id) {
+            const table = Table.getById(table_id);
+            if (!table) {
+                return res.status(404).json({ error: 'Table not found' });
+            }
         }
 
         // Validate items structure
@@ -177,7 +181,7 @@ router.post('/', (req, res) => {
             }
         }
 
-        const order = Order.create(table_id, items, notes || '');
+        const order = Order.create(table_id, items, notes || '', type);
         res.status(201).json(order);
     } catch (error) {
         res.status(500).json({ error: error.message });

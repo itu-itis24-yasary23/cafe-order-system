@@ -67,20 +67,20 @@ class Order {
     }));
   }
 
-  static create(tableId, items, notes = '') {
-    // Calculate total price
+  static create(table_id, items, notes, order_type = 'dine_in') {
     const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    const result = run(`
-      INSERT INTO orders (table_id, items, total_price, notes) 
-      VALUES (?, ?, ?, ?)
-    `, [tableId, JSON.stringify(items), totalPrice, notes]);
+    // For delivery, table_id can be null
+    const result = run(
+      'INSERT INTO orders (table_id, items, status, total_price, notes, order_type) VALUES (?, ?, ?, ?, ?, ?)',
+      [table_id, JSON.stringify(items), 'pending', totalPrice, notes, order_type]
+    );
 
-    // Update table status to occupied
-    run(`
-      UPDATE tables SET status = 'occupied', updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `, [tableId]);
+    // If it's a dine-in order with a table, mark table as occupied
+    if (table_id && order_type === 'dine_in') {
+      const Table = require('./Table');
+      Table.updateStatus(table_id, 'occupied');
+    }
 
     return this.getById(result.lastInsertRowid);
   }

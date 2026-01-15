@@ -2225,3 +2225,68 @@ form {
     font-weight: bold;
   }
 }
+
+/* =====================================================
+   DELIVERY FEATURE STYLES
+   ===================================================== */
+
+/* Order Type Selector */
+.order-type-selector {
+  display: flex;
+  background: var(--bg-tertiary);
+  padding: 4px;
+  border-radius: 12px;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.type-option {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+.type-option input {
+  display: none;
+}
+
+.type-option:has(input:checked) {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.type-option:hover:not(:has(input:checked)) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.type-option .icon {
+  font-size: 1.2rem;
+}
+
+/* Delivery Badge & Card Styles */
+.delivery-badge {
+  background: rgba(255, 152, 0, 0.2) !important;
+  color: #ff9800 !important;
+  border: 1px solid rgba(255, 152, 0, 0.3) !important;
+}
+
+.order-delivery {
+  border-left: 4px solid #ff9800 !important;
+  background: linear-gradient(145deg, rgba(255, 152, 0, 0.05) 0%, var(--bg-secondary) 100%);
+}
+
+.order-delivery .order-header {
+  border-bottom: 1px solid rgba(255, 152, 0, 0.1);
+}
