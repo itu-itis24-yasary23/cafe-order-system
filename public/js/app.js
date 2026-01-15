@@ -1208,6 +1208,22 @@ async function loadZReport() {
 
         statusContainer.innerHTML = statusHtml;
 
+        // Render Order Type Breakdown
+        const typesContainer = document.getElementById('zreport-types');
+        if (report.orderTypeBreakdown) {
+            const typesHtml = `
+                <div class="z-stat-row">
+                    <span class="z-stat-name">🍽️ Dine In</span>
+                    <span class="z-stat-count">${report.orderTypeBreakdown.dine_in.count} (${report.orderTypeBreakdown.dine_in.revenue.toFixed(0)} ₺)</span>
+                </div>
+                <div class="z-stat-row">
+                    <span class="z-stat-name">🛵 Delivery</span>
+                    <span class="z-stat-count">${report.orderTypeBreakdown.delivery.count} (${report.orderTypeBreakdown.delivery.revenue.toFixed(0)} ₺)</span>
+                </div>
+            `;
+            typesContainer.innerHTML = typesHtml;
+        }
+
         // Update timestamp
         const genDate = new Date(report.generatedAt);
         generatedEl.textContent = `Generated: ${genDate.toLocaleDateString()} ${genDate.toLocaleTimeString()}`;

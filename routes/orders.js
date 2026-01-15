@@ -106,6 +106,24 @@ router.get('/z-report', (req, res) => {
             paid: dayOrders.filter(o => o.status === 'paid').length
         };
 
+        // Order Type Breakdown (Dine-in vs Delivery)
+        const orderTypeBreakdown = {
+            dine_in: {
+                count: 0,
+                revenue: 0
+            },
+            delivery: {
+                count: 0,
+                revenue: 0
+            }
+        };
+
+        dayOrders.forEach(order => {
+            const type = order.order_type === 'delivery' ? 'delivery' : 'dine_in';
+            orderTypeBreakdown[type].count++;
+            orderTypeBreakdown[type].revenue += (order.total_price || 0);
+        });
+
         res.json({
             date: targetDate,
             totalOrders,
@@ -113,6 +131,7 @@ router.get('/z-report', (req, res) => {
             items: itemsArray,
             categoryCounts,
             statusBreakdown,
+            orderTypeBreakdown, // Include in response
             generatedAt: new Date().toISOString()
         });
     } catch (error) {
