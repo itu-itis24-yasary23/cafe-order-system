@@ -729,10 +729,12 @@ function renderMenuNew(items) {
         return;
     }
 
-    container.innerHTML = filtered.map(item => `
+    container.innerHTML = filtered.map(item => {
+        const hasImage = item.image_url && item.image_url.trim() !== '';
+        return `
         <div class="menu-card-new ${item.available ? '' : 'unavailable'}">
-            <div class="menu-card-image" ${item.image_url ? `style="background: url('${item.image_url}') center/cover no-repeat;"` : ''}>
-                ${!item.image_url ? `<span class="category-emoji">${getCategoryEmoji(item.category)}</span>` : ''}
+            <div class="menu-card-image" ${hasImage ? `style="background: url('${item.image_url}') center/cover no-repeat;"` : ''}>
+                ${!hasImage ? `<span class="category-emoji">${getCategoryEmoji(item.category)}</span>` : ''}
                 ${!item.available ? '<span class="menu-card-unavailable-badge">Unavailable</span>' : ''}
             </div>
             <div class="menu-card-body">
@@ -752,7 +754,7 @@ function renderMenuNew(items) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 // Keep old renderMenu for compatibility with order modal
