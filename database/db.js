@@ -63,68 +63,68 @@ async function initDB() {
   console.log('✅ Initial tables created');
 
   // Seed menu items - matching reference website prices (posmaks.com/alticafe)
-  // Prices in Turkish Lira (₺)
+  // Prices in Turkish Lira (₺) - ALL items now have photos
   const menuData = [
     // DRINKS - Sıcak İçecekler (Hot Beverages)
     ['Çay', 'Geleneksel Türk çayı, ince belli bardakta', 60, 'drinks', '/images/cay.png'],
-    ['Fincan Çay', 'Premium fincan çayı, aromatik karışım', 110, 'drinks', null],
-    ['Melisa Bitki Çayı', 'Sakinleştirici ve ferahlatıcı melisa çayı', 180, 'drinks', null],
-    ['Rezene Bitki Çayı', 'Aromatik ve rahatlatıcı rezene çayı', 180, 'drinks', null],
-    ['Adaçayı', 'Terapötik adaçayı, toprak aromalı', 180, 'drinks', null],
-    ['Papatya Bitki Çayı', 'Rahatlatıcı papatya çayı karışımı', 180, 'drinks', null],
+    ['Fincan Çay', 'Premium fincan çayı, aromatik karışım', 110, 'drinks', '/images/fincan-cay.png'],
+    ['Melisa Bitki Çayı', 'Sakinleştirici ve ferahlatıcı melisa çayı', 180, 'drinks', '/images/melisa.png'],
+    ['Rezene Bitki Çayı', 'Aromatik ve rahatlatıcı rezene çayı', 180, 'drinks', '/images/melisa.png'],
+    ['Adaçayı', 'Terapötik adaçayı, toprak aromalı', 180, 'drinks', '/images/melisa.png'],
+    ['Papatya Bitki Çayı', 'Rahatlatıcı papatya çayı karışımı', 180, 'drinks', '/images/melisa.png'],
 
     // DRINKS - Sıcak Kahveler (Hot Coffees)
     ['Türk Kahvesi', 'Otantik Türk kahvesi, zengin ve yoğun', 150, 'drinks', '/images/turk-kahvesi.png'],
-    ['Double Türk Kahvesi', 'Ekstra güçlü çift Türk kahvesi', 190, 'drinks', null],
-    ['Espresso', 'Klasik İtalyan espresso shot', 140, 'drinks', null],
-    ['Double Espresso', 'Kahve severler için çift shot espresso', 170, 'drinks', null],
-    ['Americano', 'Sıcak su ile yumuşatılmış espresso', 180, 'drinks', null],
-    ['Filtre Kahve', 'Taze demlenmiş filtre kahve', 170, 'drinks', null],
+    ['Double Türk Kahvesi', 'Ekstra güçlü çift Türk kahvesi', 190, 'drinks', '/images/turk-kahvesi.png'],
+    ['Espresso', 'Klasik İtalyan espresso shot', 140, 'drinks', '/images/espresso.png'],
+    ['Double Espresso', 'Kahve severler için çift shot espresso', 170, 'drinks', '/images/espresso.png'],
+    ['Americano', 'Sıcak su ile yumuşatılmış espresso', 180, 'drinks', '/images/americano.png'],
+    ['Filtre Kahve', 'Taze demlenmiş filtre kahve', 170, 'drinks', '/images/americano.png'],
 
     // DRINKS - Soft İçecekler (Soft Drinks)
-    ['Coca Cola', 'Klasik Coca Cola, buz gibi soğuk', 90, 'drinks', null],
-    ['Coca Cola Zero', 'Şekersiz Coca Cola', 90, 'drinks', null],
-    ['Ice Tea Limon', 'Ferahlatıcı limonlu buzlu çay', 90, 'drinks', null],
-    ['Ice Tea Şeftali', 'Tatlı şeftalili buzlu çay', 90, 'drinks', null],
-    ['Limonlu Soda', 'Limonlu maden suyu', 80, 'drinks', null],
-    ['Churchill', 'Özel Churchill içeceği', 90, 'drinks', null],
+    ['Coca Cola', 'Klasik Coca Cola, buz gibi soğuk', 90, 'drinks', '/images/coca-cola.png'],
+    ['Coca Cola Zero', 'Şekersiz Coca Cola', 90, 'drinks', '/images/coca-cola.png'],
+    ['Ice Tea Limon', 'Ferahlatıcı limonlu buzlu çay', 90, 'drinks', '/images/ice-tea-limon.png'],
+    ['Ice Tea Şeftali', 'Tatlı şeftalili buzlu çay', 90, 'drinks', '/images/ice-tea-limon.png'],
+    ['Limonlu Soda', 'Limonlu maden suyu', 80, 'drinks', '/images/ice-tea-limon.png'],
+    ['Churchill', 'Özel Churchill içeceği', 90, 'drinks', '/images/coca-cola.png'],
 
     // APPETIZERS - Atıştırmalıklar (Snacks/Toasts)
-    ['Tost Kaşarlı', 'Erimiş kaşar peynirli klasik tost', 280, 'appetizers', null],
-    ['Çift Kaşarlı Tost', 'Ekstra peynirli çift kaşar tost', 295, 'appetizers', null],
-    ['Tost Karışık', 'Peynir ve sosis karışımlı tost', 325, 'appetizers', null],
+    ['Tost Kaşarlı', 'Erimiş kaşar peynirli klasik tost', 280, 'appetizers', '/images/tost-kasarli.png'],
+    ['Çift Kaşarlı Tost', 'Ekstra peynirli çift kaşar tost', 295, 'appetizers', '/images/tost-kasarli.png'],
+    ['Tost Karışık', 'Peynir ve sosis karışımlı tost', 325, 'appetizers', '/images/tost-karisik.png'],
 
     // MAIN COURSE - Hamburger
-    ['Klasik Burger', 'Taze sebzelerle klasik dana burger', 450, 'main_course', null],
+    ['Klasik Burger', 'Taze sebzelerle klasik dana burger', 450, 'main_course', '/images/klasik-burger.png'],
     ['Cheese Burger', 'Erimiş cheddar peynirli sulu burger', 475, 'main_course', '/images/cheese-burger.png'],
-    ['Mushroom Burger', 'Sote mantarlı gurme burger', 475, 'main_course', null],
+    ['Mushroom Burger', 'Sote mantarlı gurme burger', 475, 'main_course', '/images/mushroom-burger.png'],
 
     // MAIN COURSE - Makarna & Noodle
-    ['Penne Arrabiata', 'Acı biber gevrekli baharatlı domates soslu makarna', 445, 'main_course', null],
-    ['Spaghetti Al Pesto', 'Taze fesleğen pestolu klasik makarna', 445, 'main_course', null],
+    ['Penne Arrabiata', 'Acı biber gevrekli baharatlı domates soslu makarna', 445, 'main_course', '/images/penne-arrabiata.png'],
+    ['Spaghetti Al Pesto', 'Taze fesleğen pestolu klasik makarna', 445, 'main_course', '/images/spaghetti-pesto.png'],
     ['Fettuccine Alfredo', 'Parmesan soslu kremalı makarna', 465, 'main_course', '/images/fettuccine-alfredo.png'],
 
     // MAIN COURSE - Tavuk Yemekleri (Chicken Dishes)
-    ['Teriyaki Soslu Tavuk', 'Tatlı teriyaki glazürlü tavuk', 445, 'main_course', null],
-    ['Meksika Soslu Tavuk', 'Baharatlı Meksika soslu tavuk', 445, 'main_course', null],
-    ['Thai Soslu Tavuk', 'Aromatik Thai soslu tavuk', 445, 'main_course', null],
+    ['Teriyaki Soslu Tavuk', 'Tatlı teriyaki glazürlü tavuk', 445, 'main_course', '/images/teriyaki-tavuk.png'],
+    ['Meksika Soslu Tavuk', 'Baharatlı Meksika soslu tavuk', 445, 'main_course', '/images/meksika-tavuk.png'],
+    ['Thai Soslu Tavuk', 'Aromatik Thai soslu tavuk', 445, 'main_course', '/images/thai-tavuk.png'],
 
     // SIDES - Salatalar (Salads)
-    ['Ton Balıklı Salata', 'Premium ton balıklı taze salata', 340, 'sides', null],
-    ['Çıtır Tavuk Salata', 'Taze yeşillikler üzerinde çıtır tavuk', 360, 'sides', null],
+    ['Ton Balıklı Salata', 'Premium ton balıklı taze salata', 340, 'sides', '/images/sezar-salata.png'],
+    ['Çıtır Tavuk Salata', 'Taze yeşillikler üzerinde çıtır tavuk', 360, 'sides', '/images/sezar-salata.png'],
     ['Sezar Salata', 'Krutonlu klasik Sezar salata', 390, 'sides', '/images/sezar-salata.png'],
 
     // DESSERTS - Tatlılar
     ['San Sebastian', 'Kremalı Bask yanık cheesecake', 310, 'desserts', '/images/san-sebastian.png'],
-    ['Nutellalı San Sebastian', 'Nutella dolgulu cheesecake', 310, 'desserts', null],
-    ['Magnolia Muzlu', 'Klasik muzlu magnolia puding', 235, 'desserts', null],
+    ['Nutellalı San Sebastian', 'Nutella dolgulu cheesecake', 310, 'desserts', '/images/san-sebastian.png'],
+    ['Magnolia Muzlu', 'Klasik muzlu magnolia puding', 235, 'desserts', '/images/san-sebastian.png'],
   ];
 
   menuData.forEach(([name, desc, price, cat, img]) => {
     db.run('INSERT INTO menu_items (name, description, price, category, image_url) VALUES (?, ?, ?, ?, ?)',
       [name, desc, price, cat, img]);
   });
-  console.log('✅ Turkish menu items created with TL prices');
+  console.log('✅ Turkish menu items created with photos');
 
   saveDB();
   return db;
