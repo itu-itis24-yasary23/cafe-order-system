@@ -81,7 +81,7 @@ async function loadDashboard() {
         document.getElementById('stat-active-orders').textContent =
             (orderStats.pending || 0) + (orderStats.preparing || 0) + (orderStats.ready || 0) + (orderStats.served || 0);
         document.getElementById('stat-menu-items').textContent = menuStats.total || 0;
-        document.getElementById('stat-today-revenue').textContent = `$${(orderStats.today_revenue || 0).toFixed(2)}`;
+        document.getElementById('stat-today-revenue').textContent = `${(orderStats.today_revenue || 0).toFixed(0)} ₺`;
 
         // Load active orders preview
         const activeOrders = await fetch(`${API_BASE}/orders/active`).then(r => r.json());
@@ -321,14 +321,14 @@ async function loadOrders() {
                   ${item.name}
                   <span class="order-item-qty">x${item.quantity}</span>
                 </span>
-                <span class="order-item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+                <span class="order-item-price">${(item.price * item.quantity).toFixed(0)} ₺</span>
               </div>
             `).join('')}
             ${order.items.length > 3 ? `<p class="empty-state" style="padding: 0.5rem 0; font-size: 0.75rem;">+${order.items.length - 3} more items...</p>` : ''}
           </div>
           <div class="order-total-row">
             <span>Total</span>
-            <span class="order-total-amount">$${order.total_price.toFixed(2)}</span>
+            <span class="order-total-amount">${order.total_price.toFixed(0)} ₺</span>
           </div>
           <div class="order-actions">
             ${getOrderActionButtons(order)}
@@ -490,7 +490,7 @@ function renderOrderMenuItems(items, category) {
     container.innerHTML = filtered.map(item => `
         <div class="order-menu-item ${item.available ? '' : 'unavailable'}">
             <div class="order-menu-item-name">${item.name}</div>
-            <div class="order-menu-item-price">$${item.price.toFixed(2)}</div>
+            <div class="order-menu-item-price">${item.price.toFixed(0)} ₺</div>
             <button type="button" class="order-menu-item-add" onclick="addToOrder(${item.id})">
                 + Add
             </button>
@@ -554,13 +554,13 @@ function updateOrderSummary() {
         </div>
         <span class="order-summary-item-name">${item.name}</span>
       </div>
-      <span class="order-summary-item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+      <span class="order-summary-item-price">${(item.price * item.quantity).toFixed(0)} ₺</span>
       <button class="order-summary-item-remove" onclick="removeFromOrder(${item.id})">×</button>
     </div>
   `).join('');
 
     const total = currentOrderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    totalEl.textContent = `$${total.toFixed(2)}`;
+    totalEl.textContent = `${total.toFixed(0)} ₺`;
 }
 
 async function handleOrderSubmit(e) {
@@ -747,7 +747,7 @@ function renderMenuNew(items) {
                     <span class="toggle-label">${item.available ? 'In Stock' : 'Out of Stock'}</span>
                 </div>
                 <div class="menu-card-footer">
-                    <span class="menu-card-price">$${item.price.toFixed(2)}</span>
+                    <span class="menu-card-price">${item.price.toFixed(0)} ₺</span>
                     <div class="menu-card-actions-new">
                         <button class="btn-edit-small" onclick="editMenuItem(${item.id})" title="Edit">✏️</button>
                         <button class="btn-delete-small" onclick="confirmDeleteMenuItem(${item.id})" title="Delete">🗑️</button>
