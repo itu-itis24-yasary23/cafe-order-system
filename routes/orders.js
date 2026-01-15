@@ -52,10 +52,10 @@ router.get('/z-report', (req, res) => {
             itemCategoryMap[item.name] = item.category;
         });
 
-        // Filter orders for the target date
+        // Filter orders for the target date AND 'paid' status
         const dayOrders = orders.filter(order => {
             const orderDate = order.created_at.split(' ')[0];
-            return orderDate === targetDate;
+            return orderDate === targetDate && order.status === 'paid';
         });
 
         // Calculate statistics
