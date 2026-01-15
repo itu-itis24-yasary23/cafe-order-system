@@ -155,19 +155,17 @@
       <section id="orders-section" class="section">
         <div class="section-header">
           <h1>Orders Management</h1>
-          <div class="section-header-actions">
-            <button class="btn-secondary" onclick="openZReport()">
-              <span>📊</span> Z-Report
-            </button>
-            <button class="btn-primary" onclick="openNewOrderModal()">
-              <span>➕</span> New Order
-            </button>
-          </div>
+          <button class="btn-primary" onclick="openNewOrderModal()">
+            <span>➕</span> New Order
+          </button>
         </div>
 
         <div class="orders-filters">
           <button class="filter-btn active" data-filter="active">Active Orders</button>
           <button class="filter-btn" data-filter="all">All Orders</button>
+          <button class="btn-secondary" onclick="openZReport()" style="margin-left: auto;">
+            <span>📊</span> Z-Report
+          </button>
         </div>
 
         <div id="orders-list" class="orders-grid">
