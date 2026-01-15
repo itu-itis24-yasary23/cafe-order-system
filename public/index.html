@@ -185,6 +185,9 @@
               <input type="text" id="menu-search" placeholder="Search products..."
                 oninput="filterMenuBySearch(this.value)">
             </div>
+            <button class="btn-secondary" onclick="openCategoriesModal()">
+              <span>📂</span> Manage Categories
+            </button>
             <button class="btn-primary" onclick="openMenuItemModal()">
               <span>➕</span> Add Item
             </button>
@@ -496,6 +499,67 @@
         <div class="zreport-footer">
           <span id="zreport-generated">Generated: --</span>
           <button class="btn-primary" onclick="printZReport()">🖨️ Print Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories Management Modal -->
+  <div id="categories-modal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>📂 Manage Categories</h2>
+        <button class="close-btn" onclick="closeModal('categories-modal')">&times;</button>
+      </div>
+      <div class="categories-content">
+        <div class="categories-list-container">
+          <table class="z-table" id="categories-table">
+            <thead>
+              <tr>
+                <th style="width: 50px">Order</th>
+                <th style="width: 50px">Icon</th>
+                <th>Name</th>
+                <th>Slug</th>
+                <th style="width: 100px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="categories-table-body">
+              <!-- Filled via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="category-form-container">
+          <h3>Add / Edit Category</h3>
+          <form id="category-form" onsubmit="handleCategorySubmit(event)">
+            <input type="hidden" id="category-id">
+            <div class="form-row">
+              <div class="form-group" style="flex: 1;">
+                <label for="category-emoji">Emoji</label>
+                <input type="text" id="category-emoji" required placeholder="e.g. 🍔" maxlength="2"
+                  style="font-size: 1.5rem; text-align: center;">
+              </div>
+              <div class="form-group" style="flex: 3;">
+                <label for="category-name">Name</label>
+                <input type="text" id="category-name" required placeholder="Category Name"
+                  oninput="generateSlug(this.value)">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="category-slug">Slug (ID)</label>
+                <input type="text" id="category-slug" required placeholder="category-slug">
+              </div>
+              <div class="form-group">
+                <label for="category-order">Sort Order</label>
+                <input type="number" id="category-order" required value="0">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary" onclick="resetCategoryForm()">Reset</button>
+              <button type="submit" class="btn-primary">Save Category</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

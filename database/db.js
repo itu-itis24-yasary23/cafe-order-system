@@ -25,12 +25,23 @@ async function initDB() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      slug TEXT NOT NULL UNIQUE,
+      emoji TEXT NOT NULL,
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS menu_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       description TEXT,
       price REAL NOT NULL,
-      category TEXT NOT NULL CHECK(category IN ('drinks', 'appetizers', 'main_course', 'desserts', 'sides')),
+      category TEXT NOT NULL,
       available INTEGER NOT NULL DEFAULT 1,
       image_url TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -58,6 +69,20 @@ async function initDB() {
     db.run('INSERT INTO tables (table_number) VALUES (?)', [num]);
   });
   console.log('✅ Initial tables created');
+
+  // Seed categories
+  const categoriesData = [
+    ['Drinks', 'drinks', '🍹', 1],
+    ['Appetizers', 'appetizers', '🥗', 2],
+    ['Main Course', 'main_course', '🍽️', 3],
+    ['Desserts', 'desserts', '🍰', 4],
+    ['Sides', 'sides', '🍟', 5]
+  ];
+
+  categoriesData.forEach(([name, slug, emoji, order]) => {
+    db.run('INSERT INTO categories (name, slug, emoji, sort_order) VALUES (?, ?, ?, ?)', [name, slug, emoji, order]);
+  });
+  console.log('✅ Categories seeded');
 
   // Seed menu items - matching reference website prices (posmaks.com/alticafe)
   // Prices in Turkish Lira (₺) - ALL items now have photos

@@ -23,11 +23,13 @@ async function startServer() {
         const tablesRoutes = require('./routes/tables');
         const menuRoutes = require('./routes/menu');
         const ordersRoutes = require('./routes/orders');
+        const categoriesRoutes = require('./routes/categories');
 
         // API Routes
         app.use('/api/tables', tablesRoutes);
         app.use('/api/menu', menuRoutes);
         app.use('/api/orders', ordersRoutes);
+        app.use('/api/categories', categoriesRoutes);
 
         // Image upload endpoint
         app.post('/api/upload', (req, res) => {

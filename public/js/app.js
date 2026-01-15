@@ -9,6 +9,7 @@ const API_BASE = '/api';
 let currentOrderItems = [];
 let menuItems = [];
 let tables = [];
+let categoriesCache = [];
 
 // =====================================================
 // INITIALIZATION
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initFilters();
     loadDashboard();
+    fetchCategories(); // Fetch categories in background
 });
 
 // =====================================================
@@ -663,8 +665,27 @@ let menuSearchTerm = '';
 
 async function loadMenu() {
     try {
-        const response = await fetch(`${API_BASE}/menu`);
-        allMenuItems = await response.json();
+        const [menuResponse, categories] = await Promise.all([
+            fetch(`${API_BASE}/menu`),
+            fetchCategories()
+        ]);
+
+        allMenuItems = await menuResponse.json();
+
+        // Render sidebar categories
+        const sidebarProps = document.querySelector('.menu-sidebar');
+        sidebarProps.innerHTML = `
+            <div class="sidebar-category active" data-category="all">
+              <span class="category-icon">📋</span>
+              <span class="category-name">All Items</span>
+            </div>
+            ${categories.map(cat => `
+            <div class="sidebar-category" data-category="${cat.slug}">
+              <span class="category-icon">${cat.emoji}</span>
+              <span class="category-name">${cat.name}</span>
+            </div>
+            `).join('')}
+        `;
 
         // Setup sidebar category filters
         document.querySelectorAll('.sidebar-category').forEach(btn => {
@@ -685,6 +706,17 @@ async function loadMenu() {
     }
 }
 
+async function fetchCategories() {
+    try {
+        const response = await fetch(`${API_BASE}/categories`);
+        categoriesCache = await response.json();
+        return categoriesCache;
+    } catch (e) {
+        console.error('Error fetching categories:', e);
+        return [];
+    }
+}
+
 function updateCategoryTitle(title) {
     document.getElementById('menu-category-title').textContent = title;
 }
@@ -694,15 +726,9 @@ function filterMenuBySearch(term) {
     renderMenuNew(allMenuItems);
 }
 
-function getCategoryEmoji(category) {
-    const emojis = {
-        'drinks': '🍹',
-        'appetizers': '🥗',
-        'main_course': '🍽️',
-        'desserts': '🍰',
-        'sides': '🍟'
-    };
-    return emojis[category] || '🍴';
+function getCategoryEmoji(categorySlug) {
+    const category = categoriesCache.find(c => c.slug === categorySlug);
+    return category ? category.emoji : '🍽️';
 }
 
 function renderMenuNew(items) {
@@ -771,6 +797,16 @@ function openMenuItemModal(itemId = null) {
     const modal = document.getElementById('menu-modal');
     const title = document.getElementById('menu-modal-title');
     const form = document.getElementById('menu-form');
+    const categorySelect = document.getElementById('menu-category');
+
+    // Populate dynamic categories
+    categorySelect.innerHTML = '<option value="">Select category</option>';
+    categoriesCache.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.slug;
+        option.textContent = `${cat.emoji} ${cat.name}`;
+        categorySelect.appendChild(option);
+    });
 
     form.reset();
     document.getElementById('menu-item-id').value = '';
@@ -1154,3 +1190,138 @@ document.addEventListener('keydown', (e) => {
         });
     }
 });
+// =====================================================
+// CATEGORIES MANAGEMENT
+// =====================================================
+function openCategoriesModal() {
+    const modal = document.getElementById('categories-modal');
+    modal.classList.add('active');
+    loadCategoriesList();
+    resetCategoryForm();
+}
+
+async function loadCategoriesList() {
+    const categories = await fetchCategories(); // Refresh cache
+    const tbody = document.getElementById('categories-table-body');
+
+    tbody.innerHTML = categories.map(cat => `
+        <tr>
+            <td>${cat.sort_order}</td>
+            <td style="font-size: 1.5rem; text-align: center;">${cat.emoji}</td>
+            <td style="font-weight: 500;">${cat.name}</td>
+            <td style="color: var(--text-secondary); font-family: monospace;">${cat.slug}</td>
+            <td>
+                <div class="table-actions" style="justify-content: flex-start;">
+                    <button class="btn-edit-small" onclick="editCategory(${cat.id})" title="Edit">✏️</button>
+                    <button class="btn-delete-small" onclick="confirmDeleteCategory(${cat.id})" title="Delete">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function resetCategoryForm() {
+    const form = document.getElementById('category-form');
+    form.reset();
+    document.getElementById('category-id').value = '';
+    // Default sort order
+    document.getElementById('category-order').value = categoriesCache.length + 1;
+}
+
+function generateSlug(name) {
+    const slugInput = document.getElementById('category-slug');
+    // Only auto-generate if user hasn't manually edited it (simple check: if it's empty or matches previous auto-gen)
+    // For now, just always auto-gen if name changes and slug is empty or we force it? 
+    // Let's just do it simple: auto-fill.
+    const slug = name.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    slugInput.value = slug;
+}
+
+async function handleCategorySubmit(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('category-id').value;
+    const name = document.getElementById('category-name').value;
+    const slug = document.getElementById('category-slug').value;
+    const emoji = document.getElementById('category-emoji').value;
+    const sort_order = parseInt(document.getElementById('category-order').value);
+
+    const payload = { name, slug, emoji, sort_order };
+
+    try {
+        let response;
+        if (id) {
+            response = await fetch(`${API_BASE}/categories/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            response = await fetch(`${API_BASE}/categories`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error);
+        }
+
+        showToast(id ? 'Category updated' : 'Category created', 'success');
+        resetCategoryForm();
+        loadCategoriesList();
+
+        // Refresh menu and sidebar to reflect changes
+        loadMenu();
+
+    } catch (error) {
+        console.error('Error saving category:', error);
+        showToast(error.message, 'error');
+    }
+}
+
+async function editCategory(id) {
+    const category = categoriesCache.find(c => c.id === id);
+    if (!category) return;
+
+    document.getElementById('category-id').value = category.id;
+    document.getElementById('category-name').value = category.name;
+    document.getElementById('category-slug').value = category.slug;
+    document.getElementById('category-emoji').value = category.emoji;
+    document.getElementById('category-order').value = category.sort_order;
+}
+
+function confirmDeleteCategory(id) {
+    const category = categoriesCache.find(c => c.id === id);
+    showConfirmModal(
+        'Delete Category',
+        `Are you sure you want to delete category "${category.name}"? This is only possible if no menu items are assigned to it.`,
+        () => deleteCategory(id)
+    );
+}
+
+async function deleteCategory(id) {
+    try {
+        const response = await fetch(`${API_BASE}/categories/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error);
+        }
+
+        closeModal('confirm-modal');
+        showToast('Category deleted', 'success');
+        loadCategoriesList();
+        loadMenu();
+
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        showToast(error.message, 'error');
+    }
+}
