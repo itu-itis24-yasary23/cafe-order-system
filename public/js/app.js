@@ -352,7 +352,8 @@ function getOrderActionButtons(order) {
         const nextStatusMap = {
             'pending': 'preparing',
             'preparing': 'ready',
-            'ready': 'served'
+            'ready': 'served',
+            'served': 'pending'
         };
 
         const nextStatus = nextStatusMap[order.status];
